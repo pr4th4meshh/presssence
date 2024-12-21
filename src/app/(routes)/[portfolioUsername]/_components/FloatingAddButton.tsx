@@ -388,12 +388,12 @@ const FloatingAddButton = ({
           onClick={() => setIsOpen(!isOpen)}
           title={
             isOpen ? (
-              <h1 className="flex items-center text-lg">
+              <h1 className="flex items-center text-sm sm:text-lg">
                 Close <IoClose className="ml-2" />
               </h1>
             ) : (
-              <h1 className="flex items-center text-lg">
-                Add Items <IoAdd className="ml-2" />
+              <h1 className="flex items-center text-xs sm:text-lg sm:flex-row flex-col sm:p-0 p-1">
+                Add <br className="sm:hidden block" /> Items <IoAdd className="ml-2 sm:block hidden" />
               </h1>
             )
           }
