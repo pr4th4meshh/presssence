@@ -8,7 +8,7 @@ import SkillItem from "./portfolioSkills/SkillsItem"
 
 const PortfolioSkills = ({ skillsAndFeatures }: any) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [skills, setSkills] = useState(skillsAndFeatures.features)
+  const [skills, setSkills] = useState(skillsAndFeatures?.features)
   const [newSkill, setNewSkill] = useState("")
   const { data: session } = useSession()
   const params = useParams()
@@ -83,7 +83,7 @@ const PortfolioSkills = ({ skillsAndFeatures }: any) => {
               </div>
             ))}
           </div>
-          {session?.user?.id === skillsAndFeatures.userId && (
+          {session?.user?.id === skillsAndFeatures?.userId && (
             <EditButton
               className="mt-2 mr-2 float-right"
               onClick={() => setIsEditing(true)}

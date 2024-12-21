@@ -11,10 +11,12 @@ import { socialIcons } from "./portfolioSocials/SocialMediaIcons"
 const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
   const [isEditing, setIsEditing] = useState(false)
   const [socialMediaLinks, setSocialMediaLinks] = useState(
-    socialMediaLinksViaPortfolio.socialMedia
+    socialMediaLinksViaPortfolio?.socialMedia || {}
   )
   const { data: session } = useSession()
   const params = useParams()
+
+  console.log(socialMediaLinks, "SOCIALMEDIALINKS")
 
   const handleInputChange = (platform: string, value: string) => {
     setSocialMediaLinks((prev: object | any) => ({
@@ -60,7 +62,7 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {Object.keys(socialMediaLinks).map((platform) => (
+            {Object.keys(socialMediaLinks || []).map((platform) => (
               <SocialMediaInput
                 key={platform}
                 platform={platform}
@@ -93,7 +95,7 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
                   )
                 })}
             </div>
-            {session?.user?.id === socialMediaLinksViaPortfolio.userId && (
+            {session?.user?.id === socialMediaLinksViaPortfolio?.userId && (
               <EditButton
                 className="float-right mt-4 sm:mt-0"
                 onClick={() => setIsEditing(true)}

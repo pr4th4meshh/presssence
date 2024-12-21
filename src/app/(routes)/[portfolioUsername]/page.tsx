@@ -13,54 +13,8 @@ import PortfolioSocials from "./_components/PortfolioSocials"
 import CTAComponent from "./_components/CTAComponent"
 import FloatingAddButton from "./_components/FloatingAddButton"
 import SharePresssenceButton from "./_components/SharePresssenceButton"
-import { set } from "zod"
-import PrimaryButton from "@/components/ui/primary-button"
-import Link from "next/link"
 import NoPortfolioScreen from "./_components/NoPortfolioScreen"
-
-interface ProfileData {
-  userId: string
-  username: string
-  name: string
-  profession: string
-  headline: string
-  photo: string
-  theme: {
-    style: string
-    aiGenerated: boolean
-  }
-  socialMedia: {
-    twitter: string
-    linkedin: string
-    github: string
-    website: string
-    behance: string
-    figma: string
-    awwwards: string
-    dribbble: string
-    medium: string
-    instgram: string
-    youtube: string
-  }
-  projects: {
-    title: string
-    description: string
-    link: string
-    timeline: string
-  }[]
-  features: string[]
-  achievements: {
-    title: string
-    issuer: string
-    date: string
-  }[]
-  analytics: {
-    views: number
-    engagement: number
-  }
-  blogEnabled: boolean
-  collaborators: string[]
-}
+import { ProfileData } from "@/utils/interfaces"
 
 export default function Portfolio() {
   const params = useParams()
@@ -143,50 +97,6 @@ export default function Portfolio() {
     return <NoPortfolioScreen />
   }
 
-  // const backgroundStyle = {
-  //   modern: `
-  //     bg-gradient-to-r from-blue-100 via-blue-300 to-blue-500
-  //     background-size: 400% 400%;
-  //     animation: gradient 15s ease infinite;
-  //     @keyframes gradient {
-  //       0% {
-  //         background-position: 0% 50%;
-  //       }
-  //       50% {
-  //         background-position: 100% 50%;
-  //       }
-  //       100% {
-  //         background-position: 0% 50%;
-  //       }
-  //     }
-  //   `,
-  //   creative: `
-  //     bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))]
-  //     from-pink-300 via-purple-300 to-indigo-400
-  //     animate-[pulse_8s_ease-in-out_infinite]
-  //   `,
-  //   professional: `
-  //     bg-gradient-to-br from-gray-100 to-gray-300
-  //     bg-[url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%239C92AC" fill-opacity="0.1" fill-rule="evenodd"%3E%3Ccircle cx="3" cy="3" r="3"/%3E%3Ccircle cx="13" cy="13" r="3"/%3E%3C/g%3E%3C/svg%3E')]
-  //   `,
-  //   bold: `
-  //     bg-gradient-to-bl from-yellow-400 via-red-500 to-pink-500
-  //     animate-[gradient_3s_ease_infinite]
-  //     background-size: 200% 200%;
-  //     @keyframes gradient {
-  //       0% {
-  //         background-position: 0% 50%;
-  //       }
-  //       50% {
-  //         background-position: 100% 50%;
-  //       }
-  //       100% {
-  //         background-position: 0% 50%;
-  //       }
-  //     }
-  //   `,
-  // }
-
   return (
     <div className="min-h-screen dark:bg-black bg-light">
       {/* Call to action component on the right to create new portfolio/pressence  */}
@@ -207,7 +117,7 @@ export default function Portfolio() {
             <SharePresssenceButton />
 
             <FloatingAddButton
-              userId={profileData0.userId}
+              userId={profileData0?.userId}
               socialMediaLinks={profileData0?.socialMedia}
               features={profileData0?.features}
               refetchData={refetchData}
