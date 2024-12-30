@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       features,
       projects,
       username,
-      socialLinks,  
+      socialLinks,
     } = await req.json()
 
     const session = await getServerSession(authOptions)
@@ -71,7 +71,6 @@ export async function POST(req: Request) {
         theme: theme || "modern",
         features,
         userId: session?.user.id,
-        // socialLinks: socialLinks ? [socialLinks] : [],
         socialMedia: {
           create: socialLinks,
         },
@@ -108,7 +107,10 @@ export async function GET(req: Request) {
     const portfolioUsername = url.searchParams.get("portfolioUsername")
 
     if (!portfolioUsername) {
-      return NextResponse.json({ message: "Missing porfolio username" }, { status: 400 })
+      return NextResponse.json(
+        { message: "Missing porfolio username" },
+        { status: 400 }
+      )
     }
 
     const portfolio = await prisma.portfolio.findFirst({
@@ -151,17 +153,14 @@ export async function GET(req: Request) {
 // update portfolio route:
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || !session.user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-    }
-
     const url = new URL(req.url)
     const portfolioUsername = url.searchParams.get("portfolioUsername")
 
     if (!portfolioUsername) {
-      return NextResponse.json({ message: "Missing portfolioUsername" }, { status: 400 })
+      return NextResponse.json(
+        { message: "Missing portfolioUsername" },
+        { status: 400 }
+      )
     }
 
     const updateData = await req.json()
@@ -169,7 +168,10 @@ export async function PUT(req: Request) {
     // Find the portfolio by username
     const existingPortfolio = await prisma.portfolio.findUnique({
       where: { username: portfolioUsername },
-      include: { User: true },
+      include: {
+        socialMedia: true,
+        User: true,
+      },
     })
 
     if (!existingPortfolio) {
@@ -179,24 +181,19 @@ export async function PUT(req: Request) {
       )
     }
 
-    // Check if the logged-in user is the owner of the portfolio
-    if (existingPortfolio.User.id !== session.user.id) {
-      return NextResponse.json(
-        { message: "You are not authorized to update this portfolio" },
-        { status: 403 }
-      )
-    }
-
     // Prepare the update data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const portfolioUpdate: any = {}
 
     // Update basic fields if provided
     if (updateData.fullName) portfolioUpdate.fullName = updateData.fullName
-    if (updateData.profession) portfolioUpdate.profession = updateData.profession
+    if (updateData.profession)
+      portfolioUpdate.profession = updateData.profession
     if (updateData.headline) portfolioUpdate.headline = updateData.headline
     if (updateData.theme) portfolioUpdate.theme = updateData.theme
     if (updateData.features) portfolioUpdate.features = updateData.features
-    if (updateData.coverImage) portfolioUpdate.coverImage = updateData.coverImage 
+    if (updateData.coverImage)
+      portfolioUpdate.coverImage = updateData.coverImage
 
     // Update projects if provided
     if (updateData.projects) {
@@ -215,7 +212,14 @@ export async function PUT(req: Request) {
     // Update social links if provided
     if (updateData.socialLinks) {
       portfolioUpdate.socialMedia = {
-        update: updateData.socialLinks
+        upsert: {
+          create: {
+            ...updateData.socialLinks,
+          },
+          update: {
+            ...updateData.socialLinks,
+          },
+        },
       }
     }
 
