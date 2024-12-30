@@ -11,12 +11,20 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import Image from "next/image"
 
 type AddItemType = "social" | "feature" | "project"
+interface IProject {
+  title: string
+  description: string
+  link: string
+  timeline: string
+  coverImage?: string
+}
 
 interface FloatingAddButtonProps {
   userId: string
   socialMediaLinks: Record<string, string> | undefined
   features: string[] | undefined
-  projects: any[] | undefined
+  projects: IProject[] | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdate: (type: AddItemType, newData: any) => void
   refetchData: () => void
 }
@@ -43,7 +51,7 @@ const FloatingAddButton = ({
   const [imageUploadProgress, setImageUploadProgress] = useState(0)
   const params = useParams()
 
-  let progress = 0;
+  let progress = 0
 
   const showToast = (message: string) => {
     setToast({ message, visible: true })
@@ -360,7 +368,9 @@ const FloatingAddButton = ({
                         />
                       )}
                     </div>
-                    {imageUploadProgress > 0 && <h1>Uploading image.. {imageUploadProgress}%</h1>}
+                    {imageUploadProgress > 0 && (
+                      <h1>Uploading image.. {imageUploadProgress}%</h1>
+                    )}
                   </>
                 )}
                 <div className="flex justify-end space-x-2">
@@ -393,7 +403,8 @@ const FloatingAddButton = ({
               </h1>
             ) : (
               <h1 className="flex items-center text-xs sm:text-lg sm:flex-row flex-col sm:p-0 p-1">
-                Add <br className="sm:hidden block" /> Items <IoAdd className="ml-2 sm:block hidden" />
+                Add <br className="sm:hidden block" /> Items{" "}
+                <IoAdd className="ml-2 sm:block hidden" />
               </h1>
             )
           }

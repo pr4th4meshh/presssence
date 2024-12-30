@@ -62,7 +62,7 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {Object.keys(socialMediaLinks || []).map((platform) => (
+            {Object.keys(socialMediaLinks).map((platform) => (
               <SocialMediaInput
                 key={platform}
                 platform={platform}

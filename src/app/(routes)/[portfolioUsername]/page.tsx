@@ -97,6 +97,8 @@ export default function Portfolio() {
     return <NoPortfolioScreen />
   }
 
+  console.log("profileData0?.socialMedia",profileData0)
+
   return (
     <div className="min-h-screen dark:bg-black bg-light">
       {/* Call to action component on the right to create new portfolio/pressence  */}

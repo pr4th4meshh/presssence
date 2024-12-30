@@ -172,6 +172,7 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
                 width={400}
                 height={400}
                 className="rounded-full object-cover w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] border-2 dark:border-white border-black"
+                priority
               />
             )}
           </div>
