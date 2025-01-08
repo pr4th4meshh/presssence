@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       "images.unsplash.com",
       "firebasestorage.googleapis.com",
       "avatar.iran.liara.run",
+      "i.postimg.cc"
     ],
   },
 }
