@@ -23,6 +23,7 @@ interface IProfileData {
   profession: string
   headline: string
   theme: string
+  userId: string
 }
 
 const PortfolioHero = ({ profileData }: IProfileData) => {
@@ -36,6 +37,9 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
   const [file, setFile] = useState(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userData, setUserData] = useState<IUser | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0]
@@ -90,6 +94,9 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
   const handleUpload = async () => {
     if (!file) return
 
+    setIsUploading(true)
+    setUploadError(null)
+
     const storageRef = ref(
       storage,
       `profile_images/${session?.user?.id}_${file.name}`
@@ -103,17 +110,23 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ photoUrl: downloadURL }), // Send the new image URL
+        body: JSON.stringify({ photoUrl: downloadURL }),
       })
 
       const data = await response.json()
       if (response.ok) {
-        update({ ...session, user: { ...session.user, image: downloadURL } })
+        update({ ...session, user: { ...session?.user, image: downloadURL } })
+        setUserData(prevData => ({ ...prevData, image: downloadURL }))
+        setUploadStatus("Profile image updated successfully! \n Save Changes to see the changes.")
+      } else {
+        throw new Error(data.message || "Failed to update profile image")
       }
-      alert("Profile image updated successfully!")
     } catch (error) {
       console.error("Error uploading image:", error)
-      alert("Error uploading image.")
+      setUploadError("Failed to upload image. Please try again.")
+    } finally {
+      setIsUploading(false)
+      setFile(null)
     }
   }
 
@@ -154,7 +167,7 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
 
   const ImageLoadingSkeleton = () => {
     return (
-      <div className="w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gray-400 rounded-full animate-pulse" />
+      <div className="w-[250px] sm:w-[300px] h-[250px] sm:h-[300px] bg-gray-400 rounded-full animate-pulse" />
     )
   }
 
@@ -167,11 +180,11 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
               <ImageLoadingSkeleton />
             ) : (
               <Image
-                src={userData?.image}
+                src={userData?.image || '/default-profile-picture.jpg'}
                 alt={`${fullName}'s Profile Picture`}
                 width={400}
                 height={400}
-                className="rounded-full object-cover w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] border-2 dark:border-white border-black"
+                className="rounded-full object-cover w-[250px] sm:w-[300px] h-[250px] sm:h-[300px] border-2 dark:border-white border-black"
                 priority
               />
             )}
@@ -183,18 +196,24 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
                 accept="image/*"
                 onChange={handleFileChange}
                 className="mt-4"
+                disabled={isUploading}
               />
               {file && (
                 <PrimaryButton
-                  title="Upload profile picture"
+                  title={isUploading ? "Uploading..." : "Upload profile picture"}
                   onClick={handleUpload}
                   className="bg-orange-500 text-white mt-2 w-full max-w-full border-orange-200"
+                  disabled={isUploading}
                 />
               )}
+              {isUploading && <p className="text-blue-500 mt-2">Uploading image...</p>}
+              {uploadStatus && <p className="text-green-500 mt-2 whitespace-pre text-center">{uploadStatus}</p>}
+              {uploadError && <p className="text-red-500 mt-2">{uploadError}</p>}
               <PrimaryButton
                 title="Cancel Editing"
                 onClick={() => setIsEditing(false)}
                 className="w-full max-w-full border border-red-500 bg-transparent text-black dark:text-white transition-colors duration-300 mt-2"
+                disabled={isUploading}
               />
             </div>
           )}
@@ -203,7 +222,7 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
         <div className="w-full sm:w-2/3 space-y-6">
           {isEditing ? (
             <form onSubmit={handleSubmit} className="space-y-6">
-               <InputField id="fullName" label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <InputField id="fullName" label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
               <InputField id="profession" label="Profession" value={profession} onChange={(e) => setProfession(e.target.value)} />
               <TextAreaField id="headline" label="Headline" value={headline} onChange={(e) => setHeadline(e.target.value)} />
               <ThemeSelect value={theme} onChange={(e) => setTheme(e.target.value)} />
