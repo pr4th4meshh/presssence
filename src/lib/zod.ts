@@ -44,7 +44,7 @@ export const formSchema = z.object({
       coverImage: z.string().optional(),
     })
   ),
-  socialMedia: z.object({
+  socialLinks: z.object({
     twitter: z.string().optional(),
     linkedin: z.string().optional(),
     github: z.string().optional(),
