@@ -61,6 +61,11 @@ export async function POST(req: Request) {
       )
     }
 
+    const filteredSocialLinks = Object.fromEntries(
+      Object.entries(socialLinks).filter(([ value]) => value)
+    );
+    
+
     // Create a new portfolio with the socialLinks
     const portfolio = await prisma.portfolio.create({
       data: {
@@ -72,7 +77,7 @@ export async function POST(req: Request) {
         features,
         userId: session?.user.id,
         socialMedia: {
-          create: socialLinks,
+          create: filteredSocialLinks,
         },
         projects: {
           create: projects.map((project: IProject) => ({
