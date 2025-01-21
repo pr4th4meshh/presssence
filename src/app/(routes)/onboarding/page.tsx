@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { WavyBackground } from "@/components/ui/wavy-background"
 import { formSchema, FormData } from "@/lib/zod"
-import { CustomTagsInput } from "@/components/CustomTagsInput"
 import BasicInfoStep from "./_components/BasicInfoStep"
 import ProfessionalDetailsStep from "./_components/ProfessionalDetailsStep"
 import ProjectsStep from "./_components/ProjectsStep"
@@ -41,10 +40,13 @@ export default function OnboardingForm() {
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true)
+      const filteredSocialLinks = Object.fromEntries(
+        Object.entries(data.socialLinks).filter(([value]) => value && value.trim() !== "")
+      )
       const res = await fetch("/api/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, features: selectedFeatures }),
+        body: JSON.stringify({ ...data, socialLinks: filteredSocialLinks,  features: selectedFeatures }),
       })
       if (!res.ok) throw new Error("Failed to create portfolio")
       router.push(`/${data.username}`)
