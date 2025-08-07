@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: Inter;
+  src: url("./fonts/Inter.ttf");
+}
+
+* {
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  scrollbar-width: none;
+}
+
+.customFormScrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: gray rgba(255, 255, 255, 0.1);
+  scrollbar-track-color: antiquewhite;
+}
