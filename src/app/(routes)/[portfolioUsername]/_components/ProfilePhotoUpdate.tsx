@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebase'
 import Image from 'next/image'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface ProfilePhotoUploadProps {
   currentPhotoUrl: string
@@ -52,16 +54,16 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ currentPhotoUrl
         height={100}
         className="rounded-full"
       />
-      <button className="relative">
+      <Button className="relative">
         {uploading ? 'Uploading...' : 'Change Photo'}
-        <input
+        <Input
           type="file"
           accept="image/*"
           onChange={handleFileChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={uploading}
         />
-      </button>
+      </Button>
     </div>
   )
 }

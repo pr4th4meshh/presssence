@@ -2,6 +2,9 @@
 import { registerUser } from "@/actions/registerUser"
 import SigninWGoogle from "@/components/SigninWGoogle"
 import BorderStyleButton from "@/components/ui/border-button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { FormFields, SignupSchemaFrontend } from "@/lib/zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
@@ -52,10 +55,10 @@ const SignUp = () => {
           onSubmit={handleSubmit(handleOnSubmit)}
         >
           <div>
-            <label htmlFor="name" className="block text-sm font-medium">
+            <Label htmlFor="name" className="block text-sm font-medium">
               Enter name
-            </label>
-            <input
+            </Label>
+            <Input
               id="name"
               type="text"
               {...register("name")}
@@ -68,10 +71,10 @@ const SignUp = () => {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium">
+            <Label htmlFor="email" className="block text-sm font-medium">
               Enter email
-            </label>
-            <input
+            </Label>
+            <Input
               id="email"
               type="email"
               {...register("email")}
@@ -84,10 +87,10 @@ const SignUp = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium">
+            <Label htmlFor="password" className="block text-sm font-medium">
               Enter password
-            </label>
-            <input
+            </Label>
+            <Input
               id="password"
               type="password"
               {...register("password")}

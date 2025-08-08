@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils"
 import React from "react"
 import { RiEditBoxLine } from "react-icons/ri";
@@ -9,7 +10,7 @@ interface IEditButton {
 
 const EditButton = ({ onClick, className }: IEditButton) => {
   return (
-    <button
+    <Button
       onClick={onClick}
       className={cn(
         "relative inline-flex h-12 w-12 overflow-hidden rounded-full p-[2px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 justify-center items-center",
@@ -20,7 +21,7 @@ const EditButton = ({ onClick, className }: IEditButton) => {
       <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-slate-950 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
         <RiEditBoxLine className="text-xl" />
       </span>
-    </button>
+    </Button>
   )
 }
 

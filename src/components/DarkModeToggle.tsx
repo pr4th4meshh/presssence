@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { IoMoonOutline, IoSunnyOutline } from "react-icons/io5"
+import { Button } from "./ui/button"
 
 export default function DarkModeToggle() {
   const [isDarkMode, setIsDarkMode] = useState(true)
@@ -26,11 +27,11 @@ export default function DarkModeToggle() {
   }
 
   return (
-    <button
+    <Button
       onClick={toggleDarkMode}
       className="p-2 rounded-full text-white dark:text-white text-2xl"
     >
       {isDarkMode ? <IoMoonOutline/> : <IoSunnyOutline />}
-    </button>
+    </Button>
   )
 }

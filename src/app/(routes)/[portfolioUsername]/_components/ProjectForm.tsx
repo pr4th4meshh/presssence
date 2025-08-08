@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
 import React from "react"
 import { FaTrash } from "react-icons/fa6"
@@ -42,13 +46,13 @@ const ProjectForm = ({
   return (
     <div className="border border-gray-300 rounded-lg p-4 space-y-4">
       <div>
-        <label
+        <Label
           htmlFor={`title-${index}`}
           className="block text-sm font-medium py-1"
         >
           Title
-        </label>
-        <input
+        </Label>
+        <Input
           type="text"
           id={`title-${index}`}
           value={project.title}
@@ -58,13 +62,13 @@ const ProjectForm = ({
       </div>
 
       <div>
-        <label
+        <Label
           htmlFor={`description-${index}`}
           className="block text-sm font-medium py-1"
         >
           Description
-        </label>
-        <textarea
+        </Label>
+        <Textarea
           id={`description-${index}`}
           value={project.description}
           onChange={(e) =>
@@ -76,13 +80,13 @@ const ProjectForm = ({
       </div>
 
       <div>
-        <label
+        <Label
           htmlFor={`link-${index}`}
           className="block text-sm font-medium py-1"
         >
           Link
-        </label>
-        <input
+        </Label>
+        <Input
           type="url"
           id={`link-${index}`}
           value={project.link}
@@ -92,13 +96,13 @@ const ProjectForm = ({
       </div>
 
       <div>
-        <label
+        <Label
           htmlFor={`timeline-${index}`}
           className="block text-sm font-medium py-1"
         >
           Timeline
-        </label>
-        <input
+        </Label>
+        <Input
           type="date"
           id={`timeline-${index}`}
           value={project.timeline}
@@ -108,13 +112,13 @@ const ProjectForm = ({
       </div>
 
       <div>
-        <label
+        <Label
           htmlFor={`image-${index}`}
           className="block text-sm font-medium py-1"
         >
           Project Image
-        </label>
-        <input
+        </Label>
+        <Input
           type="file"
           id={`image-${index}`}
           accept="image/*"
@@ -137,22 +141,22 @@ const ProjectForm = ({
           <p className="text-blue-400 mt-2">Image uploaded successfully!</p>
         )}
         {!uploading && imagePreviews[index] && (
-          <button
+          <Button
             type="button"
             onClick={() => handleUploadImage(index)}
             className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
           >
             Upload Image
-          </button>
+          </Button>
         )}
       </div>
-      <button
+      <Button
         type="button"
         onClick={() => handleRemoveProject(index)}
         className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
       >
         <FaTrash className="mr-2" /> Remove Project
-      </button>
+      </Button>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import PrimaryButton from "@/components/ui/primary-button"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import Image from "next/image"
+import { Input } from "@/components/ui/input"
 
 interface ImageUploadProps {
   currentImageUrl: string | null
@@ -55,7 +56,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           className="bg-orange-500 text-white mt-2 w-full max-w-full border-orange-200"
         />
       )}
-      <input
+      <Input
         type="file"
         accept="image/*"
         onChange={handleFileChange}

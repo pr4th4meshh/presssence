@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils"
 import React from "react"
+import { Button } from "./button"
 
 interface BorderStyleButtonProps {
   title: string | React.ReactNode
@@ -17,7 +18,7 @@ const BorderStyleButton = ({
   type,
 }: BorderStyleButtonProps) => {
   return (
-    <button
+    <Button
       onClick={onClick}
       className={cn(
         "relative inline-flex h-12 overflow-hidden rounded-full p-[2px] focus:outline-none",
@@ -30,7 +31,7 @@ const BorderStyleButton = ({
       <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full dark:bg-black bg-gray-900 px-3 py-1 text-sm font-medium text-white backdrop-blur-3xl">
         {title}
       </span>
-    </button>
+    </Button>
   )
 }
 

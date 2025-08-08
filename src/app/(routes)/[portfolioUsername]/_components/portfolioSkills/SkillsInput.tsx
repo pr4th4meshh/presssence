@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import React from 'react'
 
 interface SkillInputProps {
@@ -8,20 +10,20 @@ interface SkillInputProps {
 
 const SkillInput: React.FC<SkillInputProps> = ({ newSkill, setNewSkill, handleAddSkill }) => (
   <div className="flex items-center space-x-2">
-    <input
+    <Input
       type="text"
       value={newSkill}
       onChange={(e) => setNewSkill(e.target.value)}
       placeholder="Add a new skill"
       className="flex-grow p-2 border border-gray-300 rounded-md"
     />
-    <button
+    <Button
       type="button"
       onClick={handleAddSkill}
       className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
     >
       Add
-    </button>
+    </Button>
   </div>
 )
 

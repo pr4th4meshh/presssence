@@ -2,6 +2,7 @@
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { IoMoonOutline, IoSunnyOutline } from "react-icons/io5"
+import { Button } from "./button"
 
 export default function ThemeSwitch() {
   const [mounted, setMounted] = useState(false)
@@ -14,23 +15,23 @@ export default function ThemeSwitch() {
 
   if (resolvedTheme === "dark") {
     return (
-      <button
+      <Button
         className=" dark:text-white text-3xl p-2"
         onClick={() => setTheme("light")}
       >
         <IoSunnyOutline />
-      </button>
+      </Button>
     )
   }
 
   if (resolvedTheme === "light") {
     return (
-      <button
+      <Button
         className=" dark:text-white text-3xl p-2"
         onClick={() => setTheme("dark")}
       >
         <IoMoonOutline />
-      </button>
+      </Button>
     )
   }
 }

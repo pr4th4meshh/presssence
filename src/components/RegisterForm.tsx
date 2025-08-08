@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 // import { input } from '@/components/ui/input'
 // import { label } from '@/components/ui/label'
 import { registerUser } from '@/actions/registerUser'
+import { Button } from './ui/button'
+import { Label } from './ui/label'
+import { Input } from './ui/input'
 
 export default function RegisterForm() {
   const [name, setName] = useState('')
@@ -31,7 +34,7 @@ export default function RegisterForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label htmlFor="name">Name</label>
-        <input
+        <Input
           id="name"
           type="text"
           value={name}
@@ -41,7 +44,7 @@ export default function RegisterForm() {
       </div>
       <div>
         <label htmlFor="email">Email</label>
-        <input
+        <Input
           id="email"
           type="email"
           value={email}
@@ -50,8 +53,8 @@ export default function RegisterForm() {
         />
       </div>
       <div>
-        <label htmlFor="password">Password</label>
-        <input
+        <Label htmlFor="password">Password</Label>
+        <Input
           id="password"
           type="password"
           value={password}
@@ -60,7 +63,7 @@ export default function RegisterForm() {
         />
       </div>
       {error && <p className="text-red-500">{error}</p>}
-      <button type="submit" className="w-full">Register</button>
+      <Button type="submit" className="w-full">Register</Button>
     </form>
   )
 }

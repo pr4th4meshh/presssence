@@ -9,6 +9,10 @@ import { IoAdd, IoClose } from "react-icons/io5"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 type AddItemType = "social" | "feature" | "project"
 interface IProject {
@@ -177,28 +181,28 @@ const FloatingAddButton = ({
     <>
       <div className="fixed bottom-6 right-6 z-50">
         {isOpen && (
-          <div className="absolute bottom-16 right-0 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80">
+          <div className="absolute bottom-16 right-0 bg-white dark:bg-dark rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80">
             {!addType ? (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New Item</h3>
-                <button
+                <Button
                   onClick={() => setAddType("social")}
                   className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   Add Social Media
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setAddType("feature")}
                   className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   Add Skill/Feature
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setAddType("project")}
                   className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   Add Project
-                </button>
+                </Button>
               </div>
             ) : (
               <form
@@ -212,21 +216,21 @@ const FloatingAddButton = ({
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Add {addType === "social" ? "Social Media" : addType === "feature" ? "Skill/Feature" : "Project"}
                   </h3>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setAddType(null)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   >
                     <FaTimes size={16} />
-                  </button>
+                  </Button>
                 </div>
 
                 {addType === "social" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       Social Media URL
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="url"
                       value={newSocialLink}
                       onChange={(e) => setNewSocialLink(e.target.value)}
@@ -244,10 +248,10 @@ const FloatingAddButton = ({
 
                 {addType === "feature" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       Skill or Feature
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       value={newItem}
                       onChange={(e) => setNewItem(e.target.value)}
@@ -261,10 +265,10 @@ const FloatingAddButton = ({
                 {addType === "project" && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Project Title
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="text"
                         value={newProject.title}
                         onChange={(e) =>
@@ -279,10 +283,10 @@ const FloatingAddButton = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Description
-                      </label>
-                      <textarea
+                      </Label>
+                      <Textarea
                         value={newProject.description}
                         onChange={(e) =>
                           setNewProject({
@@ -297,10 +301,10 @@ const FloatingAddButton = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Project Link
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="url"
                         value={newProject.link}
                         onChange={(e) =>
@@ -312,10 +316,10 @@ const FloatingAddButton = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Timeline
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="date"
                         value={newProject.timeline}
                         onChange={(e) =>
@@ -329,10 +333,10 @@ const FloatingAddButton = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Cover Image
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         type="file"
                         accept="image/*"
                         onChange={handleCoverImageUpload}
@@ -357,19 +361,19 @@ const FloatingAddButton = ({
                 )}
 
                 <div className="flex justify-end space-x-2 pt-4">
-                  <button
+                  <Button
                     type="button"
                     onClick={() => setAddType(null)}
                     className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     Add {addType === "social" ? "Social" : addType === "feature" ? "Skill" : "Project"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}

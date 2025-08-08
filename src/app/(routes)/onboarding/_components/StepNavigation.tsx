@@ -1,6 +1,7 @@
 import { FaChevronRight } from "react-icons/fa"
 import { BiLeftArrowAlt } from "react-icons/bi"
 import PrimaryButton from "@/components/ui/primary-button"
+import { Button } from "@/components/ui/button"
 
 interface StepNavigationProps {
   currentStep: number
@@ -23,13 +24,13 @@ export default function StepNavigation({ currentStep, totalSteps, setStep, isLoa
   return (
     <div className="flex justify-between items-center">
       {currentStep > 1 && (
-        <button
+        <Button
           className="flex items-center underline underline-offset-2"
           onClick={handlePrevious}
         >
           <BiLeftArrowAlt className="mr-1" />
           Go back
-        </button>
+        </Button>
       )}
       {currentStep === totalSteps ? (
         <PrimaryButton

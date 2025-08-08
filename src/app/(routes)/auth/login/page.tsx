@@ -10,6 +10,8 @@ import Link from "next/link"
 import BorderStyleButton from "@/components/ui/border-button"
 import SigninWGoogle from "@/components/SigninWGoogle"
 import { PiSpinner } from "react-icons/pi"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function LoginForm() {
   const [errorMessage, setErrorMessage] = useState("")
@@ -51,10 +53,10 @@ export default function LoginForm() {
           onSubmit={handleSubmit(handleOnSubmit)}
         >
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1">
+            <Label htmlFor="email" className="block text-sm font-medium mb-1">
               Enter email
-            </label>
-            <input
+            </Label>
+            <Input
               id="email"
               type="email"
               {...register("email")}
@@ -67,10 +69,10 @@ export default function LoginForm() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1">
+            <Label htmlFor="password" className="block text-sm font-medium mb-1">
               Enter password
-            </label>
-            <input
+            </Label>
+            <Input
               id="password"
               type="password"
               {...register("password")}

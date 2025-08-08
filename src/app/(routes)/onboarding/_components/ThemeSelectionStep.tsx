@@ -1,6 +1,8 @@
 import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form"
 import { FormData } from "@/lib/zod"
 import { FaPalette, FaChartBar, FaBook } from "react-icons/fa"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 
 interface ThemeSelectionStepProps {
   register: UseFormRegister<FormData>
@@ -12,7 +14,7 @@ export default function ThemeSelectionStep({ register, watch, setValue }: ThemeS
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label htmlFor="theme" className="block text-sm font-medium">Choose Your Theme</label>
+        <Label htmlFor="theme" className="block text-sm font-medium">Choose Your Theme</Label>
         <select
           id="theme"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -24,7 +26,7 @@ export default function ThemeSelectionStep({ register, watch, setValue }: ThemeS
           <option value="professional">Professional</option>
           <option value="bold">Bold & Dynamic</option>
         </select>
-        <button
+        <Button
           type="button"
           className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md dark:bg-black bg-white focus:outline-none"
           onClick={() => null}
@@ -32,12 +34,12 @@ export default function ThemeSelectionStep({ register, watch, setValue }: ThemeS
         >
           <FaPalette className="inline-block mr-2" />
           Generate AI Color Scheme
-        </button>
+        </Button>
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Enable Features</label>
+        <Label className="block text-sm font-medium">Enable Features</Label>
         <div className="grid grid-cols-2 gap-4">
-          <button
+          <Button
             type="button"
             className={`w-full px-3 py-2 border ${
               watch("analyticsEnabled") ? "bg-blue-500 text-white" : "dark:bg-black dark:text-white text-black bg-white"
@@ -47,8 +49,8 @@ export default function ThemeSelectionStep({ register, watch, setValue }: ThemeS
           >
             <FaChartBar className="inline-block mr-2" />
             Analytics
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             className={`w-full px-3 py-2 border ${
               watch("blogEnabled") ? "bg-blue-600 text-white" : "dark:bg-black dark:text-white text-black bg-white"
@@ -58,7 +60,7 @@ export default function ThemeSelectionStep({ register, watch, setValue }: ThemeS
           >
             <FaBook className="inline-block mr-2" />
             Blog
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -3,6 +3,10 @@ import { FormData } from "@/lib/zod"
 import { useState } from "react"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ProjectsStepProps {
   register: UseFormRegister<FormData>
@@ -51,10 +55,10 @@ export default function ProjectsStep({ register, errors, control }: ProjectsStep
             Project {index + 1}
           </h3>
           <div className="space-y-2">
-            <label htmlFor={`projects.${index}.title`} className="block text-sm font-medium">
+            <Label htmlFor={`projects.${index}.title`} className="block text-sm font-medium">
               Project Title
-            </label>
-            <input
+            </Label>
+            <Input
               id={`projects.${index}.title`}
               placeholder="Project Title"
               className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
@@ -65,10 +69,10 @@ export default function ProjectsStep({ register, errors, control }: ProjectsStep
             )}
           </div>
           <div className="space-y-2">
-            <label htmlFor={`projects.${index}.description`} className="block text-sm font-medium">
+            <Label htmlFor={`projects.${index}.description`} className="block text-sm font-medium">
               Project Description
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               id={`projects.${index}.description`}
               placeholder="Describe your project"
               className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
@@ -79,10 +83,10 @@ export default function ProjectsStep({ register, errors, control }: ProjectsStep
             )}
           </div>
           <div className="space-y-2">
-            <label htmlFor={`projects.${index}.link`} className="block text-sm font-medium">
+            <Label htmlFor={`projects.${index}.link`} className="block text-sm font-medium">
               Project Link
-            </label>
-            <input
+            </Label>
+            <Input
               id={`projects.${index}.link`}
               placeholder="https://example.com"
               className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
@@ -93,10 +97,10 @@ export default function ProjectsStep({ register, errors, control }: ProjectsStep
             )}
           </div>
           <div className="space-y-2">
-            <label htmlFor={`projects.${index}.timeline`} className="block text-sm font-medium">
+            <Label htmlFor={`projects.${index}.timeline`} className="block text-sm font-medium">
               Project Timeline
-            </label>
-            <input
+            </Label>
+            <Input
               id={`projects.${index}.timeline`}
               type="date"
               className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
@@ -107,10 +111,10 @@ export default function ProjectsStep({ register, errors, control }: ProjectsStep
             )}
           </div>
           <div className="space-y-2">
-            <label htmlFor={`projects.${index}.coverImage`} className="block text-sm font-medium">
+            <Label htmlFor={`projects.${index}.coverImage`} className="block text-sm font-medium">
               Cover Image
-            </label>
-            <input
+            </Label>
+            <Input
               id={`projects.${index}.coverImage`}
               type="file"
               accept="image/*"
@@ -121,22 +125,22 @@ export default function ProjectsStep({ register, errors, control }: ProjectsStep
               <p className="text-sm text-blue-500">Uploading... {uploadProgress[index].toFixed(0)}%</p>
             )}
           </div>
-          <button
+          <Button
             type="button"
             className="mt-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
             onClick={() => remove(index)}
           >
             Remove Project
-          </button>
+          </Button>
         </div>
       ))}
-      <button
+      <Button
         type="button"
         className="w-full px-3 py-2 border border-input rounded-md dark:bg-white dark:text-black text-white bg-black hover:bg-accent focus:outline-none"
         onClick={() => append({ title: "", description: "", link: "", timeline: "" })}
       >
         Add Another Project
-      </button>
+      </Button>
     </div>
   )
 }

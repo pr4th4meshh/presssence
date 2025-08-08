@@ -6,6 +6,11 @@ import { storage } from "@/lib/firebase"
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage"
 import ProjectCard from "./ProjectCard"
 import PrimaryButton from "@/components/ui/primary-button"
+import { Button } from "@/components/ui/button"
+import { Label } from "@radix-ui/react-label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import Image from "next/image"
 
 interface IProject {
   id?: string
@@ -129,7 +134,7 @@ const EditableProject = ({
         <div className="bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Project</h3>
-            <button
+            <Button
               onClick={() => {
                 setEditProject(project)
                 setIsEditing(false)
@@ -137,14 +142,14 @@ const EditableProject = ({
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
               <FiX size={20} />
-            </button>
+            </Button>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Title
-              </label>
-              <input
+              </Label>
+              <Input
                 type="text"
                 value={editProject.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
@@ -156,10 +161,10 @@ const EditableProject = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Description
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 value={editProject.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -170,10 +175,10 @@ const EditableProject = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Link
-              </label>
-              <input
+              </Label>
+              <Input
                 type="url"
                 value={editProject.link}
                 onChange={(e) => handleInputChange('link', e.target.value)}
@@ -184,10 +189,10 @@ const EditableProject = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Timeline
-              </label>
-              <input
+              </Label>
+              <Input
                 type="date"
                 value={editProject.timeline}
                 onChange={(e) => handleInputChange('timeline', e.target.value)}
@@ -197,10 +202,10 @@ const EditableProject = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Cover Image
-              </label>
-              <input
+              </Label>
+              <Input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
@@ -208,14 +213,14 @@ const EditableProject = ({
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded" />
-                  <button
+                  <Image height={128} width={128} src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded" />
+                  <Button
                     onClick={handleUploadImage}
                     disabled={uploading}
                     className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
                   >
                     {uploading ? `Uploading ${uploadProgress.toFixed(0)}%` : 'Upload Image'}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FiEdit3, FiCheck, FiX, FiTrash2 } from "react-icons/fi"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 // Individual Editable Skill Component
 const EditableSkill = ({ 
@@ -103,7 +105,7 @@ useEffect(() => {
     return (
       <div className="text-center relative" ref={wrapperRef}>
         <div className="relative">
-          <input
+          <Input
             type="text"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
@@ -132,12 +134,12 @@ useEffect(() => {
           </div>
         </div>
       </div>
-      <button
+      <Button
         onClick={() => onRemove(index)}
         className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
       >
         <FiTrash2 size={12} />
-      </button>
+      </Button>
     </div>
   )
 }

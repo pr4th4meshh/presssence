@@ -3,6 +3,7 @@ import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "rea
 import { FormData } from "@/lib/zod"
 import { useDebounce } from "@/hooks/useDebounce"
 import { PiSpinner } from "react-icons/pi"
+import { Input } from "@/components/ui/input"
 
 interface BasicInfoStepProps {
   register: UseFormRegister<FormData>
@@ -54,7 +55,7 @@ export default function BasicInfoStep({ register, errors, watch, setValue }: Bas
             <p className="text-sm text-red-500">Username unavailable or already taken</p>
           )}
         </div>
-        <input
+        <Input
           id="username"
           placeholder="Choose your username"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

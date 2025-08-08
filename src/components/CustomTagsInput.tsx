@@ -1,5 +1,6 @@
 import React, { useState, KeyboardEvent, ChangeEvent } from 'react'
 import { FaTimes } from 'react-icons/fa'
+import { Button } from './ui/button'
 
 interface CustomTagsInputProps {
   tags: string[]
@@ -35,9 +36,9 @@ export const CustomTagsInput: React.FC<CustomTagsInputProps> = ({ tags, setTags,
       {tags.map((tag, index) => (
         <div key={index} className="flex items-center bg-black text-white dark:bg-white dark:text-black rounded-full px-2 py-1 m-1">
           <span className="mr-1">{tag}</span>
-          <button type="button" onClick={() => removeTag(tag)} className="focus:outline-none">
+          <Button type="button" onClick={() => removeTag(tag)} className="focus:outline-none">
             <FaTimes className="dark:text-black text-white" />
-          </button>
+          </Button>
         </div>
       ))}
       <input

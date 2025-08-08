@@ -7,6 +7,7 @@ import EditButton from "./EditButton"
 import SocialMediaInput from "./portfolioSocials/SocialMediaInput"
 import SocialMediaCard from "./portfolioSocials/SocialMediaCard"
 import { socialIcons } from "./portfolioSocials/SocialMediaIcons"
+import { Button } from "@/components/ui/button"
 
 const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
   const [isEditing, setIsEditing] = useState(false)
@@ -69,12 +70,12 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
               />
             ))}
             <div className="flex justify-end space-x-4 mt-4">
-              <PrimaryButton
-                title="Cancel"
+              <Button
+              variant="destructive"
                 onClick={() => setIsEditing(false)}
                 className="bg-red-500 text-white"
-              />
-              <PrimaryButton title="Save Changes" type="submit" />
+              >Cancel</Button>
+              <Button variant="secondary" type="submit" >Save Changes</Button>
             </div>
           </form>
         ) : (

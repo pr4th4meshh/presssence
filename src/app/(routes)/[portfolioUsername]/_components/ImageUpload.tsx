@@ -1,3 +1,4 @@
+import { Input } from "@/components/ui/input"
 import React from "react"
 
 const ImageUpload = ({
@@ -29,7 +30,7 @@ const ImageUpload = ({
   }
 
   return (
-    <input
+    <Input
       type="file"
       accept="image/*"
       onChange={handleImageChange}
