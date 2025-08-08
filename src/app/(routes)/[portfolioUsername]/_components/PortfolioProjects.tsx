@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
-import { FaPlus } from "react-icons/fa"
-import { FiEdit3, FiCheck, FiX, FiTrash2 } from "react-icons/fi"
-import PrimaryButton from "@/components/ui/primary-button"
+import { FiEdit3, FiX, FiTrash2 } from "react-icons/fi"
 import { storage } from "@/lib/firebase"
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage"
 import ProjectCard from "./ProjectCard"
-import ProjectForm from "./ProjectForm"
+import PrimaryButton from "@/components/ui/primary-button"
 
 interface IProject {
   id?: string
@@ -57,7 +55,7 @@ const EditableProject = ({
         } finally {
           setIsSaving(false)
         }
-      }, 3000)
+      }, 1000)
     }
 
     return () => {
@@ -127,7 +125,7 @@ const EditableProject = ({
 
   if (isEditing) {
     return (
-      <div className="relative">
+      <div className="relative w-max flex justify-center items-center">
         <div className="bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Edit Project</h3>
@@ -224,7 +222,8 @@ const EditableProject = ({
           </div>
           
           {isSaving && (
-            <div className="absolute -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full">
+            <div className="absolute flex items-center -top-2 -right-2 bg-blue-500 text-white p-1 rounded-full">
+              <span className="mr-1">Saving</span>
               <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
@@ -240,18 +239,7 @@ const EditableProject = ({
         onClick={() => setIsEditing(true)}
       >
         <ProjectCard project={project} />
-        <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-          <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-2 rounded-full mr-2 mb-2">
-            <FiEdit3 size={16} />
-          </div>
-        </div>
       </div>
-      <button
-        onClick={() => onRemove(index)}
-        className="absolute -top-2 -left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
-      >
-        <FiTrash2 size={12} />
-      </button>
     </div>
   )
 }
@@ -318,7 +306,7 @@ const PortfolioProjects = ({
           className={`${
             isAGrid
               ? "grid grid-cols-1 sm:grid-cols-3 gap-4"
-              : "flex flex-col space-y-4"
+              : "flex flex-col justify-center items-center space-y-4"
           }`}
         >
           {projects.map((project: IProject, index: number) => (
