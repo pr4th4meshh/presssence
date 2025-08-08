@@ -301,7 +301,7 @@ const PortfolioHero = ({ profileData }: { profileData: IProfileData }) => {
               <ImageLoadingSkeleton />
             ) : (
               <Image
-                src={userData?.image || '/default-profile-picture.jpg'}
+                src={userData?.image || '/qp_default_avatar0.jpg'}
                 alt={`${fullName}'s Profile Picture`}
                 width={400}
                 height={400}

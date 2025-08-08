@@ -27,7 +27,7 @@ const SignUp = () => {
     try {
       const { name, email, password } = data
 
-      const defaultImage = "https://i.postimg.cc/SKpcD0fj/smiley.jpg"
+      const defaultImage = ""
       const response = await registerUser(name, email, password, defaultImage)
 
       if (response?.error) {

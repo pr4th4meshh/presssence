@@ -19,9 +19,13 @@ export async function generateMetadata({
 
   const userData = await userRes.json()
 
+  console.log("photu", userData)
   return {
     title: `${userData?.name || "Portfolio"}'s Presssence`,
     description: `Check out ${userData?.name || "this creator"}'s portfolio on Presssence.`,
+    icons: {
+        icon: `${userData.image || "favicon.ico"}`
+    }
   }
 }
 
