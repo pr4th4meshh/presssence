@@ -61,17 +61,42 @@ const FloatingAddButton = ({
     setToast({ message: "", visible: false })
   }
 
+  // Smart social media platform detection
+  const detectSocialPlatform = (url: string): string | null => {
+    const urlLower = url.toLowerCase()
+    
+    if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return 'twitter'
+    if (urlLower.includes('instagram.com') || urlLower.includes('insta')) return 'instagram'
+    if (urlLower.includes('linkedin.com') || urlLower.includes('linkedin')) return 'linkedin'
+    if (urlLower.includes('github.com') || urlLower.includes('github')) return 'github'
+    if (urlLower.includes('youtube.com') || urlLower.includes('youtube')) return 'youtube'
+    if (urlLower.includes('medium.com') || urlLower.includes('medium')) return 'medium'
+    if (urlLower.includes('dribbble.com') || urlLower.includes('dribbble')) return 'dribbble'
+    if (urlLower.includes('behance.net') || urlLower.includes('behance')) return 'behance'
+    if (urlLower.includes('figma.com') || urlLower.includes('figma')) return 'figma'
+    if (urlLower.includes('awwwards.com') || urlLower.includes('awwwards')) return 'awwwards'
+    
+    return null
+  }
+
   const handleAdd = async () => {
     if (!addType) return
 
     try {
       let updatedData
       if (addType === "social") {
-        if (socialMediaLinks && socialMediaLinks[newItem]) {
-          showToast("This social media link already exists.")
+        const detectedPlatform = detectSocialPlatform(newSocialLink)
+        if (!detectedPlatform) {
+          showToast("Could not detect social media platform. Please check the URL.")
           return
         }
-        updatedData = { ...socialMediaLinks, [newItem]: newSocialLink }
+        
+        if (socialMediaLinks && socialMediaLinks[detectedPlatform]) {
+          showToast("This social media platform already exists.")
+          return
+        }
+        
+        updatedData = { ...socialMediaLinks, [detectedPlatform]: newSocialLink }
       } else if (addType === "feature") {
         updatedData = [...(features || []), newItem]
       } else if (addType === "project") {
@@ -121,11 +146,9 @@ const FloatingAddButton = ({
   ) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Show some UI feedback here if needed (uploading...)
       const storageRef = ref(storage, `projects/${file.name}`)
       const uploadTask = uploadBytesResumable(storageRef, file)
 
-      // Monitor the upload progress (optional)
       uploadTask.on(
         "state_changed",
         (snapshot) => {
@@ -134,17 +157,13 @@ const FloatingAddButton = ({
         },
         (error) => {
           console.error("Error uploading image:", error)
-          // Show an error toast or feedback if required
         },
         async () => {
-          // After successful upload, get the download URL
           try {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-
-            // Set the cover image URL in the project
             setNewProject((prevProject) => ({
               ...prevProject,
-              coverImage: downloadURL, // Set the image URL
+              coverImage: downloadURL,
             }))
           } catch (err) {
             console.error("Failed to get download URL:", err)
@@ -154,42 +173,29 @@ const FloatingAddButton = ({
     }
   }
 
-  const availablePlatforms = [
-    "twitter",
-    "linkedin",
-    "github",
-    "website",
-    "behance",
-    "figma",
-    "awwwards",
-    "dribbble",
-    "medium",
-    "youtube",
-    "instagram",
-  ].filter((platform) => !(socialMediaLinks && socialMediaLinks[platform]))
-
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-6 right-6 z-50">
         {isOpen && (
-          <div className="absolute bottom-16 right-0 bg-white dark:bg-black dark:shadow-white shadow-black rounded-lg shadow-md border dark:border-white border-black p-4 w-72">
+          <div className="absolute bottom-16 right-0 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80">
             {!addType ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New Item</h3>
                 <button
                   onClick={() => setAddType("social")}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   Add Social Media
                 </button>
                 <button
                   onClick={() => setAddType("feature")}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
-                  Add Feature
+                  Add Skill/Feature
                 </button>
                 <button
                   onClick={() => setAddType("project")}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   Add Project
                 </button>
@@ -202,78 +208,64 @@ const FloatingAddButton = ({
                 }}
                 className="space-y-4"
               >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Add {addType === "social" ? "Social Media" : addType === "feature" ? "Skill/Feature" : "Project"}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setAddType(null)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <FaTimes size={16} />
+                  </button>
+                </div>
+
                 {addType === "social" && (
-                  <>
-                    <div>
-                      <label
-                        htmlFor="platform"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                      >
-                        Social Media Platform
-                      </label>
-                      <select
-                        id="platform"
-                        value={newItem}
-                        onChange={(e) => setNewItem(e.target.value)}
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                      >
-                        <option value="">Select a platform</option>
-                        {availablePlatforms.map((platform) => (
-                          <option key={platform} value={platform}>
-                            {platform.charAt(0).toUpperCase() +
-                              platform.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="socialLink"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                      >
-                        Social Media Link
-                      </label>
-                      <input
-                        type="url"
-                        id="socialLink"
-                        value={newSocialLink}
-                        onChange={(e) => setNewSocialLink(e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        placeholder="Enter social media link"
-                      />
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Social Media URL
+                    </label>
+                    <input
+                      type="url"
+                      value={newSocialLink}
+                      onChange={(e) => setNewSocialLink(e.target.value)}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://twitter.com/username or https://instagram.com/username"
+                      required
+                    />
+                    {newSocialLink && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Detected platform: {detectSocialPlatform(newSocialLink) || "Unknown"}
+                      </p>
+                    )}
+                  </div>
                 )}
+
                 {addType === "feature" && (
                   <div>
-                    <label
-                      htmlFor="feature"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                    >
-                      New Feature
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Skill or Feature
                     </label>
                     <input
                       type="text"
-                      id="feature"
                       value={newItem}
                       onChange={(e) => setNewItem(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder="Enter a new feature or skill"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., React, UI/UX Design, Project Management"
+                      required
                     />
                   </div>
                 )}
+
                 {addType === "project" && (
-                  <>
+                  <div className="space-y-4">
                     <div>
-                      <label
-                        htmlFor="title"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                      >
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Project Title
                       </label>
                       <input
                         type="text"
-                        id="title"
                         value={newProject.title}
                         onChange={(e) =>
                           setNewProject({
@@ -281,19 +273,16 @@ const FloatingAddButton = ({
                             title: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter project title"
+                        required
                       />
                     </div>
                     <div>
-                      <label
-                        htmlFor="description"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                      >
-                        Project Description
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        Description
                       </label>
                       <textarea
-                        id="description"
                         value={newProject.description}
                         onChange={(e) =>
                           setNewProject({
@@ -301,39 +290,33 @@ const FloatingAddButton = ({
                             description: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter project description"
                         rows={3}
+                        required
                       />
                     </div>
                     <div>
-                      <label
-                        htmlFor="link"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                      >
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Project Link
                       </label>
                       <input
                         type="url"
-                        id="link"
                         value={newProject.link}
                         onChange={(e) =>
                           setNewProject({ ...newProject, link: e.target.value })
                         }
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                        placeholder="Enter project link"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="https://project-url.com"
+                        required
                       />
                     </div>
                     <div>
-                      <label
-                        htmlFor="timeline"
-                        className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-                      >
-                        Project Timeline
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        Timeline
                       </label>
                       <input
                         type="date"
-                        id="timeline"
                         value={newProject.timeline}
                         onChange={(e) =>
                           setNewProject({
@@ -341,53 +324,51 @@ const FloatingAddButton = ({
                             timeline: e.target.value,
                           })
                         }
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
                       />
                     </div>
-
                     <div>
-                      <label
-                        htmlFor="coverImage"
-                        className="block text-sm font-medium"
-                      >
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                         Cover Image
                       </label>
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleCoverImageUpload(e)}
-                        className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                        onChange={handleCoverImageUpload}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       {newProject.coverImage && (
                         <Image
                           src={newProject.coverImage}
                           alt="Cover preview"
-                          className="mt-2 w-[150px] h-[150px] object-cover border rounded-xl dark:border-white border-black"
-                          height={200}
-                          width={200}
+                          className="mt-2 w-32 h-32 object-cover border rounded-lg dark:border-white border-black"
+                          height={128}
+                          width={128}
                         />
                       )}
+                      {imageUploadProgress > 0 && imageUploadProgress < 100 && (
+                        <div className="mt-2 text-sm text-gray-500">
+                          Uploading... {imageUploadProgress.toFixed(0)}%
+                        </div>
+                      )}
                     </div>
-                    {imageUploadProgress > 0 && (
-                      <h1>Uploading image.. {imageUploadProgress}%</h1>
-                    )}
-                  </>
+                  </div>
                 )}
-                <div className="flex justify-end space-x-2">
+
+                <div className="flex justify-end space-x-2 pt-4">
                   <button
                     type="button"
                     onClick={() => setAddType(null)}
-                    className="inline-flex items-center w-full px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                   >
-                    <FaTimes className="mr-2 h-4 w-4" />
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center w-full px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-black dark:border-white border-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    <FaPlus className="mr-2 h-4 w-4" />
-                    Add {addType}
+                    Add {addType === "social" ? "Social" : addType === "feature" ? "Skill" : "Project"}
                   </button>
                 </div>
               </form>
@@ -398,14 +379,13 @@ const FloatingAddButton = ({
           onClick={() => setIsOpen(!isOpen)}
           title={
             isOpen ? (
-              <h1 className="flex items-center text-sm sm:text-lg">
+              <div className="flex items-center text-sm">
                 Close <IoClose className="ml-2" />
-              </h1>
+              </div>
             ) : (
-              <h1 className="flex items-center text-xs sm:text-lg sm:flex-row flex-col sm:p-0 p-1">
-                Add <br className="sm:hidden block" /> Items{" "}
-                <IoAdd className="ml-2 sm:block hidden" />
-              </h1>
+              <div className="flex items-center text-sm">
+                Add <IoAdd className="ml-2" />
+              </div>
             )
           }
         />

@@ -16,8 +16,6 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
   const { data: session } = useSession()
   const params = useParams()
 
-  console.log(socialMediaLinks, "SOCIALMEDIALINKS")
-
   const handleInputChange = (platform: string, value: string) => {
     setSocialMediaLinks((prev: object | any) => ({
       ...prev,
@@ -84,7 +82,7 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
             <div className="grid sm:grid-cols-5 grid-cols-3 gap-6 sm:gap-4">
               {socialMediaArray.length > 0 &&
                 socialMediaArray.map(([platform, url]: any, index) => {
-                  const Icon = socialIcons[platform] || FaExternalLinkAlt
+                  const Icon = socialIcons[platform as keyof typeof socialIcons] || FaExternalLinkAlt
                   return (
                     <SocialMediaCard
                       key={index}

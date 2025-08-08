@@ -5,12 +5,8 @@ import { useParams } from "next/navigation"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import PrimaryButton from "@/components/ui/primary-button"
-import EditButton from "./EditButton"
-import { RiDoubleQuotesL } from "react-icons/ri"
+import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
-import InputField from "./portfolioHero/InputField"
-import TextAreaField from "./portfolioHero/TextAreaField"
-import ThemeSelect from "./portfolioHero/ThemeSelect"
 
 interface IUser {
   image: string
@@ -26,23 +22,147 @@ interface IProfileData {
   userId: string
 }
 
-const PortfolioHero = ({ profileData }: IProfileData) => {
+// Individual Editable Component
+const EditableField = ({ 
+  value, 
+  onSave, 
+  isOwner, 
+  className = "", 
+  placeholder = "Click to edit",
+  multiline = false,
+  maxLength = 100
+}: {
+  value: string
+  onSave: (newValue: string) => Promise<void>
+  isOwner: boolean
+  className?: string
+  placeholder?: string
+  multiline?: boolean
+  maxLength?: number
+}) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (editValue.trim() === value.trim()) {
+      setIsEditing(false)
+      return
+    }
+    
+    setIsSaving(true)
+    try {
+      await onSave(editValue.trim())
+      setIsEditing(false)
+    } catch (error) {
+      console.error("Error saving:", error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setEditValue(value)
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && !multiline) {
+      e.preventDefault()
+      handleSave()
+    } else if (e.key === 'Escape') {
+      handleCancel()
+    }
+  }
+
+  if (!isOwner) {
+    return (
+      <div className={className}>
+        {value || placeholder}
+      </div>
+    )
+  }
+
+  if (isEditing) {
+    return (
+      <div className="relative group">
+        {multiline ? (
+          <textarea
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleSave}
+            className={`${className} bg-transparent border-2 border-blue-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 resize-none`}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            autoFocus
+            rows={3}
+          />
+        ) : (
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleSave}
+            className={`${className} bg-transparent border-2 border-blue-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            autoFocus
+          />
+        )}
+        <div className="absolute -top-2 -right-2 flex space-x-1">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-green-500 text-white p-1 rounded-full hover:bg-green-600 transition-colors disabled:opacity-50"
+          >
+            <FiCheck size={12} />
+          </button>
+          <button
+            onClick={handleCancel}
+            className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+          >
+            <FiX size={12} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div 
+      className={`${className} group relative cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg px-2 py-1 transition-all duration-200 -mx-2`}
+      onClick={() => setIsEditing(true)}
+    >
+      {value || placeholder}
+      <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full mr-2">
+          <FiEdit3 size={14} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const PortfolioHero = ({ profileData }: { profileData: IProfileData }) => {
   const params = useParams()
   const { data: session, update } = useSession()
-  const [isEditing, setIsEditing] = useState(false)
   const [fullName, setFullName] = useState(profileData?.fullName || "")
   const [profession, setProfession] = useState(profileData?.profession || "")
   const [headline, setHeadline] = useState(profileData?.headline || "")
   const [theme, setTheme] = useState(profileData?.theme || "modern")
-  const [file, setFile] = useState(null)
+  const [file, setFile] = useState<File | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userData, setUserData] = useState<IUser | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0]
+  const isOwner = session?.user?.id === profileData?.userId
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       setFile(selectedFile)
     }
@@ -116,8 +236,8 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
       const data = await response.json()
       if (response.ok) {
         update({ ...session, user: { ...session?.user, image: downloadURL } })
-        setUserData(prevData => ({ ...prevData, image: downloadURL }))
-        setUploadStatus("Profile image updated successfully! \n Save Changes to see the changes.")
+        setUserData(prevData => prevData ? { ...prevData, image: downloadURL } : null)
+        setUploadStatus("Profile image updated successfully!")
       } else {
         throw new Error(data.message || "Failed to update profile image")
       }
@@ -130,13 +250,11 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
+  const handleSaveField = async (field: string, value: string) => {
     const updatedPortfolio = {
-      fullName,
-      profession,
-      headline,
+      fullName: field === 'fullName' ? value : fullName,
+      profession: field === 'profession' ? value : profession,
+      headline: field === 'headline' ? value : headline,
       theme,
     }
 
@@ -155,13 +273,16 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
       const data = await response.json()
 
       if (response.ok) {
-        setIsEditing(false)
+        // Update local state
+        if (field === 'fullName') setFullName(value)
+        if (field === 'profession') setProfession(value)
+        if (field === 'headline') setHeadline(value)
       } else {
-        alert(data.message || "Failed to update portfolio")
+        throw new Error(data.message || "Failed to update portfolio")
       }
     } catch (error) {
       console.error("Error updating portfolio:", error)
-      alert("An error occurred while updating the portfolio")
+      throw error
     }
   }
 
@@ -188,65 +309,69 @@ const PortfolioHero = ({ profileData }: IProfileData) => {
                 priority
               />
             )}
+            {isOwner && (
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-all duration-200 flex items-center justify-center">
+                <label className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                  <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow">
+                    <FiEdit3 size={20} />
+                  </div>
+                </label>
+              </div>
+            )}
           </div>
-          {isEditing && (
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mt-4"
-                disabled={isUploading}
-              />
-              {file && (
-                <PrimaryButton
-                  title={isUploading ? "Uploading..." : "Upload profile picture"}
-                  onClick={handleUpload}
-                  className="bg-orange-500 text-white mt-2 w-full max-w-full border-orange-200"
-                  disabled={isUploading}
-                />
-              )}
-              {isUploading && <p className="text-blue-500 mt-2">Uploading image...</p>}
-              {uploadStatus && <p className="text-green-500 mt-2 whitespace-pre text-center">{uploadStatus}</p>}
-              {uploadError && <p className="text-red-500 mt-2">{uploadError}</p>}
+          
+          {file && (
+            <div className="w-full max-w-xs">
               <PrimaryButton
-                title="Cancel Editing"
-                onClick={() => setIsEditing(false)}
-                className="w-full max-w-full border border-red-500 bg-transparent text-black dark:text-white transition-colors duration-300 mt-2"
+                title={isUploading ? "Uploading..." : "Upload profile picture"}
+                onClick={handleUpload}
+                className="bg-orange-500 text-white w-full border-orange-200"
                 disabled={isUploading}
               />
+              {isUploading && <p className="text-blue-500 mt-2 text-center">Uploading image...</p>}
+              {uploadStatus && <p className="text-green-500 mt-2 text-center">{uploadStatus}</p>}
+              {uploadError && <p className="text-red-500 mt-2 text-center">{uploadError}</p>}
             </div>
           )}
         </div>
 
         <div className="w-full sm:w-2/3 space-y-6">
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <InputField id="fullName" label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              <InputField id="profession" label="Profession" value={profession} onChange={(e) => setProfession(e.target.value)} />
-              <TextAreaField id="headline" label="Headline" value={headline} onChange={(e) => setHeadline(e.target.value)} />
-              <ThemeSelect value={theme} onChange={(e) => setTheme(e.target.value)} />
-              <PrimaryButton title="Save Changes" type="submit" className="w-full" />
-            </form>
-          ) : (
-            <div className="space-y-6 flex flex-col sm:justify-normal justify-center sm:items-start items-center">
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100">
-                {fullName}
-              </h1>
-              <p className="text-3xl md:text-4xl text-black dark:text-white">
-                {profession}
-              </p>
-              <p className="text-xl md:text-2xl flex italic dark:text-white text-black text-center">
-                <RiDoubleQuotesL className="mr-2" /> {headline}
-              </p>
-              {session?.user?.id === profileData?.userId && (
-                <EditButton
-                  className="mt-4 flex self-end mr-2"
-                  onClick={() => setIsEditing(true)}
-                />
-              )}
-            </div>
-          )}
+          <div className="space-y-6 flex flex-col sm:justify-normal justify-center sm:items-start items-center">
+            <EditableField
+              value={fullName}
+              onSave={(value) => handleSaveField('fullName', value)}
+              isOwner={isOwner}
+              className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-gray-100"
+              placeholder="Enter your full name"
+              maxLength={50}
+            />
+            
+            <EditableField
+              value={profession}
+              onSave={(value) => handleSaveField('profession', value)}
+              isOwner={isOwner}
+              className="text-3xl md:text-4xl text-black dark:text-white"
+              placeholder="Enter your profession"
+              maxLength={100}
+            />
+            
+            <EditableField
+              value={headline}
+              onSave={(value) => handleSaveField('headline', value)}
+              isOwner={isOwner}
+              className="text-xl md:text-2xl italic dark:text-white text-black text-center flex items-center"
+              placeholder="Write a compelling headline"
+              multiline={true}
+              maxLength={200}
+            />
+          </div>
         </div>
       </div>
     </div>

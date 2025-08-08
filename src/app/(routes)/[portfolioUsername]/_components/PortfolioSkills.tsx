@@ -1,32 +1,146 @@
 import React, { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
-import PrimaryButton from "@/components/ui/primary-button"
-import EditButton from "./EditButton"
-import SkillInput from "./portfolioSkills/SkillsInput"
-import SkillItem from "./portfolioSkills/SkillsItem"
+import { FiEdit3, FiCheck, FiX, FiTrash2 } from "react-icons/fi"
 
-const PortfolioSkills = ({ skillsAndFeatures }: any) => {
+// Individual Editable Skill Component
+const EditableSkill = ({ 
+  skill, 
+  index, 
+  onSave, 
+  onRemove, 
+  isOwner 
+}: {
+  skill: string
+  index: number
+  onSave: (index: number, newValue: string) => Promise<void>
+  onRemove: (index: number) => void
+  isOwner: boolean
+}) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [skills, setSkills] = useState(skillsAndFeatures?.features)
-  const [newSkill, setNewSkill] = useState("")
-  const { data: session } = useSession()
-  const params = useParams()
-  
-  const handleAddSkill = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newSkill.trim()) {
-      setSkills([...skills, newSkill.trim()])
-      setNewSkill("")
+  const [editValue, setEditValue] = useState(skill)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (editValue.trim() === skill.trim()) {
+      setIsEditing(false)
+      return
+    }
+    
+    setIsSaving(true)
+    try {
+      await onSave(index, editValue.trim())
+      setIsEditing(false)
+    } catch (error) {
+      console.error("Error saving skill:", error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  const handleRemoveSkill = (indexToRemove: number) => {
-    setSkills(skills.filter((_: string, index: number) => index !== indexToRemove))
+  const handleCancel = () => {
+    setEditValue(skill)
+    setIsEditing(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleSave()
+    } else if (e.key === 'Escape') {
+      handleCancel()
+    }
+  }
+
+  if (!isOwner) {
+    return (
+      <div className="text-center">
+        <div className="dark:text-white border border-gray-500 text-black p-3 relative rounded-2xl mx-5 hover:shadow-lg transition-all duration-200">
+          {skill}
+        </div>
+      </div>
+    )
+  }
+
+  if (isEditing) {
+    return (
+      <div className="text-center relative">
+        <div className="relative">
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleSave}
+            className="dark:text-white border-2 border-blue-500 text-black p-3 rounded-2xl mx-5 w-full bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            placeholder="Enter skill name"
+            maxLength={50}
+            autoFocus
+          />
+          <div className="absolute -top-2 -right-2 flex space-x-1">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-green-500 text-white p-1 rounded-full hover:bg-green-600 transition-colors disabled:opacity-50"
+            >
+              <FiCheck size={12} />
+            </button>
+            <button
+              onClick={handleCancel}
+              className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+            >
+              <FiX size={12} />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="text-center group">
+      <div 
+        className="dark:text-white border border-gray-500 text-black p-3 relative rounded-2xl mx-5 hover:shadow-lg transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+        onClick={() => setIsEditing(true)}
+      >
+        {skill}
+        <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full mr-2">
+            <FiEdit3 size={14} />
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={() => onRemove(index)}
+        className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+      >
+        <FiTrash2 size={12} />
+      </button>
+    </div>
+  )
+}
+
+
+
+const PortfolioSkills = ({ skillsAndFeatures }: any) => {
+  const [skills, setSkills] = useState(skillsAndFeatures?.features || [])
+  const { data: session } = useSession()
+  const params = useParams()
+  
+  const isOwner = session?.user?.id === skillsAndFeatures?.userId
+
+  const handleRemoveSkill = async (indexToRemove: number) => {
+    const updatedSkills = skills.filter((_: string, index: number) => index !== indexToRemove)
+    await handleSaveSkills(updatedSkills)
+  }
+
+  const handleUpdateSkill = async (index: number, newValue: string) => {
+    const updatedSkills = [...skills]
+    updatedSkills[index] = newValue
+    await handleSaveSkills(updatedSkills)
+  }
+
+  const handleSaveSkills = async (updatedSkills: string[]) => {
     try {
       const response = await fetch(
         `/api/portfolio?portfolioUsername=${params.portfolioUsername}`,
@@ -35,63 +149,40 @@ const PortfolioSkills = ({ skillsAndFeatures }: any) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ features: skills }),
+          body: JSON.stringify({ features: updatedSkills }),
         }
       )
 
       if (response.ok) {
-        setIsEditing(false)
+        setSkills(updatedSkills)
       } else {
         const data = await response.json()
-        alert(data.message || "Failed to update skills")
+        throw new Error(data.message || "Failed to update skills")
       }
     } catch (error) {
       console.error("Error updating skills:", error)
-      alert("An error occurred while updating the skills")
+      throw error
     }
   }
+
+
 
   return (
     skills.length > 0 && (
       <div className="container mx-auto px-4 py-20">
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <SkillInput newSkill={newSkill} setNewSkill={setNewSkill} handleAddSkill={handleAddSkill} />
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {skills.map((skill: string, index: number) => (
-
-              <SkillItem key={index} skill={skill} index={index} handleRemoveSkill={handleRemoveSkill} />
-            ))}
-          </div>
-          <div className="flex justify-end space-x-2">
-            <PrimaryButton
-              title="Cancel"
-              onClick={() => setIsEditing(false)}
-              className="bg-red-500 text-white hover:bg-red-600"
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {skills.map((skill: string, index: number) => (
+            <EditableSkill
+              key={index}
+              skill={skill}
+              index={index}
+              onSave={handleUpdateSkill}
+              onRemove={handleRemoveSkill}
+              isOwner={isOwner}
             />
-            <PrimaryButton title="Save Changes" type="submit" />
-          </div>
-        </form>
-      ) : (
-        <div className="">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-7">
-            {skills.map((skill: string, index: number) => (
-              <div key={index} className="text-center">
-                <div className="dark:text-white border border-gray-500 text-black p-2 relative rounded-2xl mx-5">
-                  {skill}
-                </div>
-              </div>
-            ))}
-          </div>
-          {session?.user?.id === skillsAndFeatures?.userId && (
-            <EditButton
-              className="mt-2 mr-2 float-right"
-              onClick={() => setIsEditing(true)}
-            />
-          )}
+          ))}
         </div>
-      )}
-    </div>
+      </div>
     )
   )
 }
