@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FiEdit3, FiCheck, FiX, FiTrash2 } from "react-icons/fi"
@@ -21,37 +21,74 @@ const EditableSkill = ({
   const [editValue, setEditValue] = useState(skill)
   const [isSaving, setIsSaving] = useState(false)
 
-  const handleSave = async () => {
-    if (editValue.trim() === skill.trim()) {
-      setIsEditing(false)
-      return
-    }
-    
-    setIsSaving(true)
-    try {
-      await onSave(index, editValue.trim())
-      setIsEditing(false)
-    } catch (error) {
-      console.error("Error saving skill:", error)
-    } finally {
-      setIsSaving(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+const wrapperRef = useRef<HTMLDivElement>(null)
+const saveTimeout = useRef<NodeJS.Timeout | null>(null)
+
+
+const handleSave = async () => {
+  if (editValue.trim() === skill.trim()) {
+    setIsEditing(false)
+    return
+  }
+  
+  setIsSaving(true)
+  try {
+    await onSave(index, editValue.trim())
+    setIsEditing(false)
+  } catch (error) {
+    console.error("Error saving skill:", error)
+  } finally {
+    setIsSaving(false)
+  }
+}
+
+
+useEffect(() => {
+  if (!isEditing) return
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      handleSave()
     }
   }
 
-  const handleCancel = () => {
-    setEditValue(skill)
-    setIsEditing(false)
+  document.addEventListener("mousedown", handleClickOutside)
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside)
   }
+}, [isEditing, editValue])
+
+useEffect(() => {
+  if (!isEditing) return
+
+  if (saveTimeout.current) clearTimeout(saveTimeout.current)
+
+  saveTimeout.current = setTimeout(() => {
+    if (editValue.trim() !== skill.trim()) {
+      handleSave()
+    } else {
+      setIsEditing(false)
+    }
+  }, 3000)
+
+  return () => {
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+  }
+}, [editValue])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Escape") {
+      setEditValue(skill)
+      setIsEditing(false)
+    }
+  
+    if (e.key === "Enter") {
       e.preventDefault()
       handleSave()
-    } else if (e.key === 'Escape') {
-      handleCancel()
     }
   }
-
+  
   if (!isOwner) {
     return (
       <div className="text-center">
@@ -64,7 +101,7 @@ const EditableSkill = ({
 
   if (isEditing) {
     return (
-      <div className="text-center relative">
+      <div className="text-center relative" ref={wrapperRef}>
         <div className="relative">
           <input
             type="text"
@@ -77,28 +114,13 @@ const EditableSkill = ({
             maxLength={50}
             autoFocus
           />
-          <div className="absolute -top-2 -right-2 flex space-x-1">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="bg-green-500 text-white p-1 rounded-full hover:bg-green-600 transition-colors disabled:opacity-50"
-            >
-              <FiCheck size={12} />
-            </button>
-            <button
-              onClick={handleCancel}
-              className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-            >
-              <FiX size={12} />
-            </button>
-          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="text-center group">
+    <div className="text-center group"> 
       <div 
         className="dark:text-white border border-gray-500 text-black p-3 relative rounded-2xl mx-5 hover:shadow-lg transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
         onClick={() => setIsEditing(true)}

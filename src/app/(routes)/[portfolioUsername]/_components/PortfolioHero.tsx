@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useParams } from "next/navigation"
@@ -23,11 +23,11 @@ interface IProfileData {
 }
 
 // Individual Editable Component
-const EditableField = ({ 
-  value, 
-  onSave, 
-  isOwner, 
-  className = "", 
+const EditableField = ({
+  value,
+  onSave,
+  isOwner,
+  className = "",
   placeholder = "Click to edit",
   multiline = false,
   maxLength = 100
@@ -43,107 +43,128 @@ const EditableField = ({
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
   const [isSaving, setIsSaving] = useState(false)
+  const saveTimeout = useRef<NodeJS.Timeout | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
-  const handleSave = async () => {
-    if (editValue.trim() === value.trim()) {
-      setIsEditing(false)
-      return
+  useEffect(() => {
+    setEditValue(value)
+  }, [value])
+
+  useEffect(() => {
+    if (!isEditing) return
+
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+
+    saveTimeout.current = setTimeout(() => {
+      if (editValue.trim() !== value.trim()) {
+        saveChanges()
+      } else {
+        setIsEditing(false)
+      }
+    }, 3000)
+
+    return () => {
+      if (saveTimeout.current) clearTimeout(saveTimeout.current)
     }
-    
+  }, [editValue])
+
+  // Detect outside clicks
+  useEffect(() => {
+    if (!isEditing) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        saveChanges()
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [isEditing, editValue])
+
+  const saveChanges = async () => {
+    if (isSaving) return
     setIsSaving(true)
     try {
-      await onSave(editValue.trim())
-      setIsEditing(false)
+      if (editValue.trim() !== value.trim()) {
+        await onSave(editValue.trim())
+      }
     } catch (error) {
-      console.error("Error saving:", error)
+      console.error("Auto-save failed:", error)
     } finally {
       setIsSaving(false)
+      setIsEditing(false)
     }
-  }
-
-  const handleCancel = () => {
-    setEditValue(value)
-    setIsEditing(false)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !multiline) {
+    if (e.key === "Escape") {
+      setEditValue(value)
+      setIsEditing(false)
+    }
+
+    if (e.key === "Enter") {
       e.preventDefault()
-      handleSave()
-    } else if (e.key === 'Escape') {
-      handleCancel()
+      saveChanges()
     }
   }
 
   if (!isOwner) {
-    return (
-      <div className={className}>
-        {value || placeholder}
-      </div>
-    )
+    return <div className={className}>{value || placeholder}</div>
   }
 
-  if (isEditing) {
-    return (
-      <div className="relative group">
-        {multiline ? (
-          <textarea
+  return (
+    <div ref={wrapperRef}>
+      {isEditing ? (
+        multiline ? (
+          <input
+            ref={(el) => {
+              inputRef.current = el
+              if (el) el.focus()
+            }}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            onBlur={handleSave}
-            className={`${className} bg-transparent border-2 border-blue-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 resize-none`}
+            className={`${className} w-auto lg:w-[650px] bg-transparent border-2 border-blue-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 resize-none`}
             placeholder={placeholder}
             maxLength={maxLength}
-            autoFocus
-            rows={3}
+          
           />
         ) : (
           <input
+            ref={(el) => {
+              inputRef.current = el
+              if (el) el.focus()
+            }}
             type="text"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            onBlur={handleSave}
             className={`${className} bg-transparent border-2 border-blue-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50`}
             placeholder={placeholder}
             maxLength={maxLength}
-            autoFocus
           />
-        )}
-        <div className="absolute -top-2 -right-2 flex space-x-1">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-green-500 text-white p-1 rounded-full hover:bg-green-600 transition-colors disabled:opacity-50"
-          >
-            <FiCheck size={12} />
-          </button>
-          <button
-            onClick={handleCancel}
-            className="bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-          >
-            <FiX size={12} />
-          </button>
+        )
+      ) : (
+        <div
+          className={`${className} group relative cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg px-2 py-1 transition-all duration-200 -mx-2`}
+          onClick={() => setIsEditing(true)}
+        >
+          {value || placeholder}
+          <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+            <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full mr-2">
+              <FiEdit3 size={14} />
+            </div>
+          </div>
         </div>
-      </div>
-    )
-  }
-
-  return (
-    <div 
-      className={`${className} group relative cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg px-2 py-1 transition-all duration-200 -mx-2`}
-      onClick={() => setIsEditing(true)}
-    >
-      {value || placeholder}
-      <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-        <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full mr-2">
-          <FiEdit3 size={14} />
-        </div>
-      </div>
+      )}
     </div>
   )
 }
+
 
 const PortfolioHero = ({ profileData }: { profileData: IProfileData }) => {
   const params = useParams()
