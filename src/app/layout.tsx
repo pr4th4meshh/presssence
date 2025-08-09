@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import { NextAuthSessionProvider, Providers } from "./providers"
+import { Toaster } from "@/components/ui/sonner"
 
 // testing commits because changed the repo name
 const poppins = localFont({
@@ -36,6 +37,7 @@ export default function RootLayout({
             {/* <ServerNavbar /> */}
             {children}
           </Providers>
+          <Toaster position="top-center" />
         </body>
       </html>
     </NextAuthSessionProvider>
