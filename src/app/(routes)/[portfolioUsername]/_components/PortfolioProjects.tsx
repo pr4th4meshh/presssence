@@ -17,6 +17,7 @@ import {
   Draggable,
   DropResult
 } from "@hello-pangea/dnd"
+import { toast } from "sonner"
 
 interface IProject {
   id?: string
@@ -135,9 +136,27 @@ const EditableProject = ({
         <div className="bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">Edit Project</h3>
-            <Button onClick={() => { setEditProject(project); setIsEditing(false) }}>
-              <FiX size={20} />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setIsEditing(false);
+                  onRemove(index);
+                }}
+                className="hover:bg-red-600"
+              >
+                <FiTrash2 size={16} />
+              </Button>
+              <Button 
+                onClick={() => { 
+                  setEditProject(project); 
+                  setIsEditing(false); 
+                }}
+                variant="outline"
+              >
+                <FiX size={16} />
+              </Button>
+            </div>
           </div>
           {/* Form Fields */}
           <div className="space-y-4">
@@ -222,9 +241,35 @@ const PortfolioProjects = ({ initialProjects }: { initialProjects: { projects: I
   }
 
   const handleRemoveProject = async (index: number) => {
-    const updatedProjects = projects.filter((_, i) => i !== index)
-    await handleSaveProjects(updatedProjects)
-  }
+    const projectToDelete = projects[index];
+    
+    if (!projectToDelete.id) {
+      // Handle case where project doesnt have an ID (shouldnt happen)
+      const updatedProjects = projects.filter((_, i) => i !== index);
+      setProjects(updatedProjects);
+      await handleSaveProjects(updatedProjects);
+      return;
+    }
+  
+    try {
+      const response = await fetch(`/api/projects/${projectToDelete.id}`, {
+        method: 'DELETE',
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to delete project');
+      }
+  
+      // Update local state
+      const updatedProjects = projects.filter((_, i) => i !== index);
+      setProjects(updatedProjects);
+      toast("Project deleted successfully!")
+
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      toast("Error deleting project")
+    }
+  };
 
   const handleSaveProjects = async (updatedProjects: IProject[]) => {
     try {
