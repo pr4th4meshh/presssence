@@ -12,6 +12,7 @@
     "@auth/prisma-adapter": "^2.7.4",
     "@clerk/clerk-sdk-node": "^5.0.66",
     "@clerk/nextjs": "^6.4.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.9.1",
     "@kinde-oss/kinde-auth-nextjs": "^2.4.6",
     "@next-auth/prisma-adapter": "^1.0.7",

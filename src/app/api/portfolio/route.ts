@@ -123,7 +123,11 @@ export async function GET(req: Request) {
         username: portfolioUsername,
       },
       include: {
-        projects: true,
+        projects: {
+          orderBy: {
+            position: "asc"
+          }
+        },
         socialMedia: {
           select: {
             twitter: true,
@@ -169,73 +173,89 @@ export async function PUT(req: Request) {
     }
 
     const updateData = await req.json()
+    const session = await getServerSession(authOptions)
 
-    // Find the portfolio by username
-    const existingPortfolio = await prisma.portfolio.findUnique({
+    if (!session || !session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
+
+    const portfolio = await prisma.portfolio.findFirst({
       where: { username: portfolioUsername },
-      include: {
-        socialMedia: true,
-        User: true,
-      },
+      include: { User: true },
     })
 
-    if (!existingPortfolio) {
-      return NextResponse.json(
-        { message: "Portfolio not found" },
-        { status: 404 }
-      )
+    if (!portfolio || portfolio.User.id !== (session.user as any).id) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
-    // Prepare the update data
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const portfolioUpdate: any = {}
-
-    // Update basic fields if provided
-    if (updateData.fullName) portfolioUpdate.fullName = updateData.fullName
-    if (updateData.profession)
-      portfolioUpdate.profession = updateData.profession
-    if (updateData.headline) portfolioUpdate.headline = updateData.headline
-    if (updateData.theme) portfolioUpdate.theme = updateData.theme
-    if (updateData.features) portfolioUpdate.features = updateData.features
-    if (updateData.coverImage)
-      portfolioUpdate.coverImage = updateData.coverImage
-
-    // Update projects if provided
-    if (updateData.projects) {
-      portfolioUpdate.projects = {
-        deleteMany: {},
-        create: updateData.projects.map((project: IProject) => ({
-          title: project.title,
-          description: project.description,
-          link: project.link || "",
-          timeline: project.timeline || "",
-          coverImage: project.coverImage || "",
-        })),
-      }
-    }
-
-    // Update social links if provided
-    if (updateData.socialLinks) {
-      portfolioUpdate.socialMedia = {
-        upsert: {
-          create: {
-            ...updateData.socialLinks,
-          },
-          update: {
-            ...updateData.socialLinks,
-          },
+    // Start transaction
+    await prisma.$transaction(async (tx) => {
+      // Update portfolio's basic fields
+      await tx.portfolio.update({
+        where: { id: portfolio.id },
+        data: {
+          fullName: updateData.fullName,
+          profession: updateData.profession,
+          headline: updateData.headline,
+          features: updateData.features,
+          theme: updateData.theme,
         },
-      }
-    }
+      })
 
-    const updatedPortfolio = await prisma.portfolio.update({
-      where: {
-        username: portfolioUsername,
-      },
-      data: portfolioUpdate,
+      // Update or create projects
+      if (updateData.projects && Array.isArray(updateData.projects)) {
+        for (let i = 0; i < updateData.projects.length; i++) {
+          const project = updateData.projects[i]
+          if (project.id) {
+            // Update existing
+            await tx.project.update({
+              where: { id: project.id },
+              data: {
+                title: project.title,
+                description: project.description,
+                link: project.link || "",
+                timeline: project.timeline || "",
+                coverImage: project.coverImage || "",
+                position: project.position !== undefined ? project.position : i
+              },
+            })
+          } else {
+            // Create new
+            await tx.project.create({
+              data: {
+                title: project.title,
+                description: project.description,
+                link: project.link || "",
+                timeline: project.timeline || "",
+                coverImage: project.coverImage || "",
+                position: project.position !== undefined ? project.position : i,
+                portfolioId: portfolio.id,
+              },
+            })
+          }
+        }
+      }
+
+      // Update social links if provided
+      if (updateData.socialLinks) {
+        await tx.socialLinks.upsert({
+          where: { portfolioId: portfolio.id },
+          update: { ...updateData.socialLinks },
+          create: {
+            portfolioId: portfolio.id,
+            ...updateData.socialLinks,
+          },
+        })
+      }
+    })
+
+    const updatedPortfolio = await prisma.portfolio.findFirst({
+      where: { username: portfolioUsername },
       include: {
+        projects: {
+          orderBy: { position: "asc" },
+        },
         socialMedia: true,
-        projects: true,
       },
     })
 

@@ -130,7 +130,7 @@ export default function Hero() {
 
           {
             <BorderStyleButton
-              title="Create your Presssence"
+              title={user?.portfolio ? "Go to your Presssence" : "Create your Presssence"}
               onClick={handleCreatePortfolio}
               className="mt-20 w-[300px] flex self-center text-2xl items-center"
             />

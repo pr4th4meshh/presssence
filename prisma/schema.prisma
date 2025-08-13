@@ -96,6 +96,7 @@ model Project {
   link        String?
   timeline    String?
   coverImage  String?
+  position    Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   portfolioId String    @db.ObjectId
