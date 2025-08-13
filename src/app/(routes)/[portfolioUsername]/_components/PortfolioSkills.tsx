@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
-import { FiEdit3, FiCheck, FiX, FiTrash2 } from "react-icons/fi"
+import { FiEdit3, FiTrash2 } from "react-icons/fi"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd"
 
 // Individual Editable Skill Component
 const EditableSkill = ({ 
@@ -122,13 +123,18 @@ useEffect(() => {
   }
 
   return (
-    <div className="text-center group"> 
+    <div className="text-center group relative"> 
       <div 
         className="dark:text-white border border-gray-500 text-black p-3 relative rounded-2xl mx-5 hover:shadow-lg transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
         onClick={() => setIsEditing(true)}
       >
         {skill}
-        <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full ml-2 cursor-grab active:cursor-grabbing">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M8 3v18M16 3v18M3 8h18M3 16h18" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
           <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full mr-2">
             <FiEdit3 size={14} />
           </div>
@@ -147,7 +153,7 @@ useEffect(() => {
 
 
 const PortfolioSkills = ({ skillsAndFeatures }: any) => {
-  const [skills, setSkills] = useState(skillsAndFeatures?.features || [])
+  const [skills, setSkills] = useState<string[]>(skillsAndFeatures?.features || [])
   const { data: session } = useSession()
   const params = useParams()
   
@@ -189,23 +195,56 @@ const PortfolioSkills = ({ skillsAndFeatures }: any) => {
     }
   }
 
+  const handleDragEnd = async (result: DropResult) => {
+    if(!result.destination) return // if item isnt dropped at a valid position return back to original position
+    const items = Array.from(skills)
+    const [reorderdItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index,0 , reorderdItem)
 
+    setSkills(items)
+    if(isOwner) await handleSaveSkills(items)
+  }
 
   return (
     skills.length > 0 && (
       <div className="container mx-auto px-4 py-20">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {skills.map((skill: string, index: number) => (
-            <EditableSkill
-              key={index}
-              skill={skill}
-              index={index}
-              onSave={handleUpdateSkill}
-              onRemove={handleRemoveSkill}
-              isOwner={isOwner}
-            />
-          ))}
-        </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="skills" direction="horizontal">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+              >
+                {skills.map((skill: string, index: number) => (
+                  <Draggable
+                    key={index} 
+                    draggableId={index.toString()} 
+                    index={index}
+                    isDragDisabled={!isOwner}
+                  >
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <EditableSkill
+                          skill={skill}
+                          index={index}
+                          onSave={handleUpdateSkill}
+                          onRemove={handleRemoveSkill}
+                          isOwner={isOwner}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
       </div>
     )
   )
