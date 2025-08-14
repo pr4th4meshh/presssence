@@ -141,6 +141,7 @@ export async function GET(req: Request) {
             figma: true,
             awwwards: true,
             dribbble: true,
+            order: true
           },
         },
       },
@@ -237,16 +238,21 @@ export async function PUT(req: Request) {
       }
 
       // Update social links if provided
-      if (updateData.socialLinks) {
-        await tx.socialLinks.upsert({
-          where: { portfolioId: portfolio.id },
-          update: { ...updateData.socialLinks },
-          create: {
-            portfolioId: portfolio.id,
-            ...updateData.socialLinks,
-          },
-        })
-      }
+// In your PUT route handler
+if (updateData.socialLinks || updateData.socialLinksOrder) {
+  await tx.socialLinks.upsert({
+    where: { portfolioId: portfolio.id },
+    update: { 
+      ...(updateData.socialLinks || {}),
+      order: updateData.socialLinksOrder || undefined
+    },
+    create: {
+      portfolioId: portfolio.id,
+      ...(updateData.socialLinks || {}),
+      order: updateData.socialLinksOrder || []
+    },
+  });
+}
     })
 
     const updatedPortfolio = await prisma.portfolio.findFirst({

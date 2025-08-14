@@ -87,6 +87,8 @@ model SocialLinks {
   dribbble    String?
   portfolioId String    @unique @db.ObjectId
   Portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+
+  order       String[] @default([])
 }
 
 model Project {
