@@ -1,24 +1,34 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { IoMoonOutline, IoSunnyOutline } from "react-icons/io5";
 
-type props = {
+type Props = {
   className?: string;
 };
 
-export const AnimatedThemeToggler = ({ className }: props) => {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+export const AnimatedThemeToggler = ({ className }: Props) => {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   const changeTheme = async () => {
     if (!buttonRef.current) return;
 
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+
     await document.startViewTransition(() => {
       flushSync(() => {
-        const dark = document.documentElement.classList.toggle("dark");
-        setIsDarkMode(dark);
+        setTheme(newTheme);
       });
     }).ready;
 
@@ -42,12 +52,17 @@ export const AnimatedThemeToggler = ({ className }: props) => {
         duration: 700,
         easing: "ease-in-out",
         pseudoElement: "::view-transition-new(root)",
-      },
+      }
     );
   };
+
   return (
     <button ref={buttonRef} onClick={changeTheme} className={cn(className)}>
-      {isDarkMode ? <IoSunnyOutline /> : <IoMoonOutline className="dark:text-white text-black" />}
+      {resolvedTheme === "dark" ? (
+        <IoSunnyOutline />
+      ) : (
+        <IoMoonOutline className="text-black dark:text-white" />
+      )}
     </button>
   );
 };
