@@ -62,9 +62,8 @@ export async function POST(req: Request) {
     }
 
     const filteredSocialLinks = Object.fromEntries(
-      Object.entries(socialLinks).filter(([ value]) => value)
-    );
-    
+      Object.entries(socialLinks).filter(([value]) => value)
+    )
 
     // Create a new portfolio with the socialLinks
     const portfolio = await prisma.portfolio.create({
@@ -125,8 +124,8 @@ export async function GET(req: Request) {
       include: {
         projects: {
           orderBy: {
-            position: "asc"
-          }
+            position: "asc",
+          },
         },
         socialMedia: {
           select: {
@@ -141,7 +140,7 @@ export async function GET(req: Request) {
             figma: true,
             awwwards: true,
             dribbble: true,
-            order: true
+            order: true,
           },
         },
       },
@@ -217,7 +216,7 @@ export async function PUT(req: Request) {
                 link: project.link || "",
                 timeline: project.timeline || "",
                 coverImage: project.coverImage || "",
-                position: project.position !== undefined ? project.position : i
+                position: project.position !== undefined ? project.position : i,
               },
             })
           } else {
@@ -237,22 +236,55 @@ export async function PUT(req: Request) {
         }
       }
 
-      // Update social links if provided
-// In your PUT route handler
-if (updateData.socialLinks || updateData.socialLinksOrder) {
-  await tx.socialLinks.upsert({
-    where: { portfolioId: portfolio.id },
-    update: { 
-      ...(updateData.socialLinks || {}),
-      order: updateData.socialLinksOrder || undefined
-    },
-    create: {
-      portfolioId: portfolio.id,
-      ...(updateData.socialLinks || {}),
-      order: updateData.socialLinksOrder || []
-    },
-  });
-}
+      // Define all supported platforms (must match your Prisma model fields)
+      const supportedPlatforms = [
+        "twitter",
+        "linkedin",
+        "github",
+        "instagram",
+        "youtube",
+        "medium",
+        "website",
+        "behance",
+        "figma",
+        "awwwards",
+        "dribbble",
+      ]
+
+      // Clean up social links before saving
+      const rawLinks = (updateData.socialLinks as Record<string, string>) || {}
+
+      // Remove empty strings from socialLinks
+      const cleanLinks: Record<string, string> = {}
+      for (const [platform, url] of Object.entries(rawLinks)) {
+        if (typeof url === "string" && url.trim()) {
+          cleanLinks[platform] = url.trim()
+        }
+      }
+
+      // Ensure order only contains valid platforms
+      const cleanOrder = (updateData.socialLinksOrder || []).filter(
+        (platform: string) => cleanLinks[platform]
+      )
+
+      // Build the full update object
+      const updateSocialData: Record<string, string | string[]> = {
+        order: cleanOrder,
+      }
+
+      // Ensure every platform is included (empty if missing)
+      for (const platform of supportedPlatforms) {
+        updateSocialData[platform] = cleanLinks[platform] || ""
+      }
+
+      await tx.socialLinks.upsert({
+        where: { portfolioId: portfolio.id },
+        update: updateSocialData,
+        create: {
+          portfolioId: portfolio.id,
+          ...updateSocialData,
+        },
+      })
     })
 
     const updatedPortfolio = await prisma.portfolio.findFirst({
