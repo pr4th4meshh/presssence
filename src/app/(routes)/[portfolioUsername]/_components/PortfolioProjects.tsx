@@ -310,7 +310,7 @@ const PortfolioProjects = ({ initialProjects }: { initialProjects: { projects: I
   return (
     projects.length > 0 && (
       <div className="py-32 container mx-auto px-4">
-        <h1 className="text-center pb-10 text-2xl uppercase">Projects</h1>
+        <h1 className="text-center pb-10 text-2xl uppercase dark:text-light text-dark">Projects</h1>
 
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable

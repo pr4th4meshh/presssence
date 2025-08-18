@@ -18,3 +18,8 @@
   scrollbar-color: gray rgba(255, 255, 255, 0.1);
   scrollbar-track-color: antiquewhite;
 }
+
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}

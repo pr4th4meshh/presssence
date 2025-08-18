@@ -153,7 +153,7 @@ const PortfolioSocials = ({ socialMediaLinksViaPortfolio }: any) => {
 
   return (
     <div className="py-20 container mx-auto px-4">
-      <h1 className="pb-10 text-2xl uppercase text-center">Socials</h1>
+      <h1 className="pb-10 text-2xl uppercase text-center dark:text-light text-dark">Socials</h1>
 
       {isEditing ? (
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -4,6 +4,7 @@ import PrimaryButton from "./ui/primary-button"
 import ThemeSwitch from "./ui/ThemeSwitch"
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { AnimatedThemeToggler } from "./AnimatedThemeToggler"
 
 const Navbar = () => {
   const router = useRouter()

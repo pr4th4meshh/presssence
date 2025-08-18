@@ -5,7 +5,7 @@ const PortfolioFooter = () => {
   const currentYear = new Date().getFullYear()
   return (
     <>
-    <div className="flex flex-row py-10 justify-center items-center">
+    <div className="flex flex-row py-10 justify-center items-center dark:text-light text-dark">
       <h1>
         Created with {" "}
         <Link
