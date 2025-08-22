@@ -52,7 +52,7 @@ export default function ProfessionalDetailsStep({ register, errors, control, sel
           setTags={setSelectedFeatures}
           placeholder="Enter your skills"
         />
-        {errors.features && <p className="text-sm text-red-500">{errors.features.message}</p>}
+        {errors.features && <p className="text-sm text-red-500">{errors.features.message as string}</p>}
       </div>
     </div>
   )

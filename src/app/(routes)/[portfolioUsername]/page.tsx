@@ -1,13 +1,19 @@
 import ClientPage from "./ClientPage"
 import { Metadata } from "next"
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { portfolioUsername: string }
-}): Promise<Metadata> {
+interface PageProps {
+  params: Promise<{
+    portfolioUsername: string
+  }>
+}
+
+export async function generateMetadata(
+  { params }: PageProps
+): Promise<Metadata> {
+  const { portfolioUsername } = await params
+  
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/portfolio/get-user-id?portfolioUsername=${params.portfolioUsername}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/portfolio/get-user-id?portfolioUsername=${portfolioUsername}`,
     { cache: "no-store" }
   )
   const userId = await res.json()
@@ -19,12 +25,11 @@ export async function generateMetadata({
 
   const userData = await userRes.json()
 
-  console.log("photu", userData)
   return {
     title: `${userData?.name || "Portfolio"}'s Presssence`,
     description: `Check out ${userData?.name || "this creator"}'s portfolio on Presssence.`,
     icons: {
-        icon: `${userData.image || "favicon.ico"}`
+      icon: `${userData.image || "favicon.ico"}`
     }
   }
 }

@@ -4,18 +4,18 @@ import { signIn } from "next-auth/react"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcrypt"
 
-interface IFormData { 
+interface IFormData {
   name: string
   email: string
   password: string
-  image: string
+  image?: string
 }
 
 export async function registerUser(
   name: string,
   email: string,
   password: string,
-  image: string
+  image?: string
 ) {
   try {
     // Check if user already exists
@@ -40,19 +40,19 @@ export async function registerUser(
         email,
         password: hashedPassword,
         image,
-        portfolio: {}
+        portfolio: {},
       },
     })
-console.log("**********************")
+    console.log("**********************")
     // Sign in the user
     const response = await signIn("credentials", { email, password })
     console.log(response, "RESPONSE")
-    
-    if(response?.error) {
-      return { error: response.error}
+
+    if (response?.error) {
+      return { error: response.error }
     }
 
-    return { success: true}
+    return { success: true }
   } catch (error) {
     console.error("Registration error:", error)
   }
@@ -63,7 +63,11 @@ export async function authenticate(
   formData: IFormData
 ) {
   try {
-    await signIn("credentials", formData)
+    await signIn("credentials", {
+      email: formData.email,
+      password: formData.password,
+      redirect: false,
+    })
   } catch (error) {
     if (error) {
       switch (error) {

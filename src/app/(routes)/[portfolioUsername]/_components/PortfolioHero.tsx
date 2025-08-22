@@ -7,6 +7,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import PrimaryButton from "@/components/ui/primary-button"
 import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
+import { ProfileData } from "@/utils/interfaces"
 
 interface IUser {
   image: string
@@ -15,11 +16,11 @@ interface IUser {
 }
 
 interface IProfileData {
-  fullName: string
-  profession: string
-  headline: string
-  theme: string
-  userId: string
+  fullName?: string
+  profession?: string
+  headline?: string
+  theme?: string
+  userId?: string
 }
 
 // Individual Editable Component
@@ -166,7 +167,7 @@ const EditableField = ({
 }
 
 
-const PortfolioHero = ({ profileData }: { profileData: IProfileData }) => {
+const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => {
   const params = useParams()
   const { data: session, update } = useSession()
   const [fullName, setFullName] = useState(profileData?.fullName || "")

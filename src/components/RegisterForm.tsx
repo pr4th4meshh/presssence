@@ -23,7 +23,7 @@ export default function RegisterForm() {
 
     const result = await registerUser(name, email, password)
 
-    if (result.error) {
+    if (result?.error) {
       setError(result.error)
     } else {
       router.push('/')

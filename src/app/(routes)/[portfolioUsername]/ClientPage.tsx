@@ -17,15 +17,15 @@ import NoPortfolioScreen from "./_components/NoPortfolioScreen"
 import { ProfileData } from "@/utils/interfaces"
 
 export default function ClientPage() {
-  const params = useParams()
-  const [profileData0, setProfileData0] = useState<ProfileData | null>(null)
+  const params = useParams<{ portfolioUsername: string }>()
+  const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [portfolioExists, setPortfolioExists] = useState(true)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const session = useSession()
 
-  const handleGetPortfolioInformation = async () => {
+  const fetchPortfolioData = async () => {
     try {
-      setLoading(true)
+      setIsLoading(true)
       const response = await fetch(
         `/api/portfolio?portfolioUsername=${params.portfolioUsername}`
       )
@@ -36,27 +36,23 @@ export default function ClientPage() {
       }
 
       const data = await response.json()
-      if (data) {
-        setProfileData0(data)
-        setPortfolioExists(true)
-      } else {
-        console.error("Portfolio fetch failed:", data.message)
-      }
+      setProfileData(data || null)
+      setPortfolioExists(true)
     } catch (error) {
       console.error("Error fetching portfolio data:", error)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const refetchData = async () => {
+  const refetchPortfolioData = async () => {
     try {
       const response = await fetch(
         `/api/portfolio?portfolioUsername=${params.portfolioUsername}`
       )
       if (response.ok) {
         const data = await response.json()
-        setProfileData0(data)
+        setProfileData(data || null)
       } else {
         console.error("Failed to fetch portfolio data.")
       }
@@ -66,26 +62,10 @@ export default function ClientPage() {
   }
 
   useEffect(() => {
-    handleGetPortfolioInformation()
+    fetchPortfolioData()
   }, [params.portfolioUsername])
 
-  const handleEndorsement = (skillIndex: number) => {
-    if (!profileData0) return
-
-    setProfileData0((prev) => {
-      if (!prev) return null
-
-      const updatedSkills = [...prev.skills]
-      updatedSkills[skillIndex].endorsements += 1
-
-      return {
-        ...prev,
-        skills: updatedSkills,
-      }
-    })
-  }
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex dark:bg-dark bg-light items-center justify-center">
         <Loading />
@@ -93,61 +73,50 @@ export default function ClientPage() {
     )
   }
 
-  if (!portfolioExists) {
+  if (!portfolioExists || !profileData) {
     return <NoPortfolioScreen />
   }
 
   return (
     <div className="min-h-screen dark:bg-black bg-light">
-      {/* Call to action component on the right to create new portfolio/pressence  */}
-      {session?.data?.user.id !== profileData0?.userId && <CTAComponent />}
-      {/* Page Header / Navbar  */}
+      {session?.data?.user.id !== profileData.userId && <CTAComponent />}
       <PageHeader />
+
       <div className="container mx-auto max-w-7xl">
-        {/* Profile Header */}
         <PortfolioHero
-          session={session}
-          params={params}
-          profileData={profileData0}
-          handleEndorsement={handleEndorsement}
+          profileData={profileData}
         />
 
-        {session?.data?.user?.id === profileData0?.userId && (
+        {session?.data?.user?.id === profileData.userId && (
           <>
             <SharePresssenceButton />
-
             <FloatingAddButton
-              userId={profileData0?.userId}
-              socialMediaLinks={profileData0?.socialMedia}
-              features={profileData0?.features}
-              refetchData={refetchData}
-              projects={profileData0?.projects}
+              userId={profileData.userId}
+              socialMediaLinks={profileData.socialMedia}
+              features={profileData.features}
+              refetchData={refetchPortfolioData}
+              projects={profileData.projects}
               onUpdate={(type, newData) => {
-                setProfileData0((prevData) => {
-                  if (!prevData) return null
-                  return {
-                    ...prevData,
-                    [type === "social"
-                      ? "socialLinks"
-                      : type === "feature"
-                      ? "features"
-                      : "projects"]: newData,
-                  }
-                })
+                setProfileData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        [type === "social"
+                          ? "socialLinks"
+                          : type === "feature"
+                          ? "features"
+                          : "projects"]: newData,
+                      }
+                    : null
+                )
               }}
             />
           </>
         )}
 
-        {/* Skills Section */}
-        <PortfolioSkills skillsAndFeatures={profileData0} />
-
-        <PortfolioSocials socialMediaLinksViaPortfolio={profileData0} />
-
-        {/* Projects Timeline */}
-        <PortfolioProjects initialProjects={profileData0} />
-
-        {/* Portfolio Footer */}
+        <PortfolioSkills skillsAndFeatures={profileData} />
+        <PortfolioSocials socialMediaLinksViaPortfolio={profileData} />
+        <PortfolioProjects initialProjects={profileData} />
         <PortfolioFooter />
       </div>
     </div>

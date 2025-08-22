@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
   const matchPassword = await bcrypt.compare(
     bodyResult.data?.password,
-    user.password
+    user.password as string
   )
 
   if (!matchPassword) {

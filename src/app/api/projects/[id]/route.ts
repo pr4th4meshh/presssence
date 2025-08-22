@@ -5,15 +5,17 @@ import { prisma } from '@/lib/prisma';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // params is now a Promise
 ) {
   try {
+    // Await the params promise first
+    const { id: projectId } = await params;
+    
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user.email) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const projectId = params.id;
     if (!projectId) {
       return NextResponse.json(
         { message: 'Project ID is required' },

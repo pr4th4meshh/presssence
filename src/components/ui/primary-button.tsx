@@ -11,7 +11,7 @@ const PrimaryButton = ({
   type
 }: {
   title: string
-  onClick?: () => void
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void
   className?: string
   icon?: React.ReactNode
   disabled?: boolean

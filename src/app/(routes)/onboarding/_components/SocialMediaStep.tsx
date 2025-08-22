@@ -32,6 +32,22 @@ const socialPlatforms = [
   { name: "dribbble", icon: FaDribbble },
 ]
 
+const socialLinksKeys = [
+  "twitter",
+  "linkedin",
+  "github",
+  "instagram",
+  "youtube",
+  "medium",
+  "website",
+  "behance",
+  "figma",
+  "awwwards",
+  "dribbble",
+] as const
+
+type SocialLinkKey = (typeof socialLinksKeys)[number]
+
 export default function SocialMediaStep({ register }: SocialMediaStepProps) {
   return (
     <div className="space-y-6 h-[30vh] overflow-hidden overflow-y-scroll customFormScrollbar">
@@ -46,7 +62,9 @@ export default function SocialMediaStep({ register }: SocialMediaStepProps) {
             type="url"
             className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder={`Enter your ${platform.name} link`}
-            {...register(`socialLinks.${platform.name}`)}
+            {...register(
+              `socialLinks.${platform.name}` as `socialLinks.${SocialLinkKey}`
+            )}
           />
         </div>
       ))}

@@ -25,10 +25,9 @@ interface IProject {
 
 interface FloatingAddButtonProps {
   userId: string
-  socialMediaLinks: Record<string, string> | undefined
+  socialMediaLinks: { [key: string]: string | string[] } | undefined
   features: string[] | undefined
   projects: IProject[] | undefined
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdate: (type: AddItemType, newData: any) => void
   refetchData: () => void
 }

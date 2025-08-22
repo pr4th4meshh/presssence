@@ -199,7 +199,7 @@ export const CardDescription = ({
 export const ProjectLink = ({ className, link }: { className?: string, link?: string }) => {
   return (
     <Link
-      href={link}
+      href={link ?? "#"}
       target="_blank"
       rel="noreferrer"
       className={cn(

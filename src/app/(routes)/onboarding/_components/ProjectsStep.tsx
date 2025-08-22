@@ -1,4 +1,4 @@
-import { UseFormRegister, FieldErrors, Control, useFieldArray } from "react-hook-form"
+import { UseFormRegister, FieldErrors, Control, useFieldArray, UseFormWatch } from "react-hook-form"
 import { FormData } from "@/lib/zod"
 import { useState } from "react"
 import { storage } from "@/lib/firebase"
@@ -12,6 +12,7 @@ interface ProjectsStepProps {
   register: UseFormRegister<FormData>
   errors: FieldErrors<FormData>
   control: Control<FormData>
+  watch: UseFormWatch<FormData>
 }
 
 export default function ProjectsStep({ register, errors, control }: ProjectsStepProps) {
