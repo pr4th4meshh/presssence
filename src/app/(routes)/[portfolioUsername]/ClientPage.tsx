@@ -83,13 +83,12 @@ export default function ClientPage() {
       <PageHeader />
 
       <div className="container mx-auto max-w-7xl">
-        <PortfolioHero
-          profileData={profileData}
-        />
+        <PortfolioHero profileData={profileData} />
 
         {session?.data?.user?.id === profileData.userId && (
           <>
-            <SharePresssenceButton />
+            {" "}
+            <SharePresssenceButton />{" "}
             <FloatingAddButton
               userId={profileData.userId}
               socialMediaLinks={profileData.socialMedia}
@@ -110,7 +109,7 @@ export default function ClientPage() {
                     : null
                 )
               }}
-            />
+            />{" "}
           </>
         )}
 

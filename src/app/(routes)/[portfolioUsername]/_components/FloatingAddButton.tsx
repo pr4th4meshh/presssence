@@ -1,11 +1,10 @@
 "use client"
 
-import React, { useState } from "react"
+import type React from "react"
+import { useState } from "react"
 import { useParams } from "next/navigation"
-import { FaPlus, FaTimes } from "react-icons/fa"
-import Toast from "@/components/PopupToast"
-import BorderStyleButton from "@/components/ui/border-button"
-import { IoAdd, IoClose } from "react-icons/io5"
+import { motion, AnimatePresence } from "framer-motion"
+import { Users, Star, Briefcase, Check, X } from "lucide-react"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import Image from "next/image"
@@ -13,8 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+import Portal from "@/components/Portal"
 
 type AddItemType = "social" | "feature" | "project"
+
 interface IProject {
   title: string
   description: string
@@ -23,7 +25,7 @@ interface IProject {
   coverImage?: string
 }
 
-interface FloatingAddButtonProps {
+interface FloatingDockProps {
   userId: string
   socialMediaLinks: { [key: string]: string | string[] } | undefined
   features: string[] | undefined
@@ -32,14 +34,7 @@ interface FloatingAddButtonProps {
   refetchData: () => void
 }
 
-const FloatingAddButton = ({
-  socialMediaLinks,
-  features,
-  projects,
-  onUpdate,
-  refetchData,
-}: FloatingAddButtonProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+const FloatingAddButton = ({ socialMediaLinks, features, projects, onUpdate, refetchData }: FloatingDockProps) => {
   const [addType, setAddType] = useState<AddItemType | null>(null)
   const [newItem, setNewItem] = useState("")
   const [newSocialLink, setNewSocialLink] = useState("")
@@ -50,55 +45,43 @@ const FloatingAddButton = ({
     timeline: "",
     coverImage: "",
   })
-  const [toast, setToast] = useState({ message: "", visible: false })
   const [imageUploadProgress, setImageUploadProgress] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
   const params = useParams()
 
-  let progress = 0
-
-  const showToast = (message: string) => {
-    setToast({ message, visible: true })
-  }
-
-  const hideToast = () => {
-    setToast({ message: "", visible: false })
-  }
-
-  // Smart social media platform detection
   const detectSocialPlatform = (url: string): string | null => {
     const urlLower = url.toLowerCase()
-    
-    if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return 'twitter'
-    if (urlLower.includes('instagram.com') || urlLower.includes('insta')) return 'instagram'
-    if (urlLower.includes('linkedin.com') || urlLower.includes('linkedin')) return 'linkedin'
-    if (urlLower.includes('github.com') || urlLower.includes('github')) return 'github'
-    if (urlLower.includes('youtube.com') || urlLower.includes('youtube')) return 'youtube'
-    if (urlLower.includes('medium.com') || urlLower.includes('medium')) return 'medium'
-    if (urlLower.includes('dribbble.com') || urlLower.includes('dribbble')) return 'dribbble'
-    if (urlLower.includes('behance.net') || urlLower.includes('behance')) return 'behance'
-    if (urlLower.includes('figma.com') || urlLower.includes('figma')) return 'figma'
-    if (urlLower.includes('awwwards.com') || urlLower.includes('awwwards')) return 'awwwards'
-    
+    if (urlLower.includes("twitter.com") || urlLower.includes("x.com")) return "twitter"
+    if (urlLower.includes("instagram.com")) return "instagram"
+    if (urlLower.includes("linkedin.com")) return "linkedin"
+    if (urlLower.includes("github.com")) return "github"
+    if (urlLower.includes("youtube.com")) return "youtube"
+    if (urlLower.includes("medium.com")) return "medium"
+    if (urlLower.includes("dribbble.com")) return "dribbble"
+    if (urlLower.includes("behance.net")) return "behance"
+    if (urlLower.includes("figma.com")) return "figma"
+    if (urlLower.includes("awwwards.com")) return "awwwards"
     return null
   }
 
   const handleAdd = async () => {
     if (!addType) return
+    setIsLoading(true)
 
     try {
       let updatedData
       if (addType === "social") {
         const detectedPlatform = detectSocialPlatform(newSocialLink)
         if (!detectedPlatform) {
-          showToast("Could not detect social media platform. Please check the URL.")
+          toast.info("Could not detect social media platform. Please check the URL.")
+          setIsLoading(false)
           return
         }
-        
         if (socialMediaLinks && socialMediaLinks[detectedPlatform]) {
-          showToast("This social media platform already exists.")
+          toast.info("This social media platform already exists.")
+          setIsLoading(false)
           return
         }
-        
         updatedData = { ...socialMediaLinks, [detectedPlatform]: newSocialLink }
       } else if (addType === "feature") {
         updatedData = [...(features || []), newItem]
@@ -106,294 +89,208 @@ const FloatingAddButton = ({
         updatedData = [...(projects || []), newProject]
       }
 
-      const response = await fetch(
-        `/api/portfolio?portfolioUsername=${params.portfolioUsername}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            [addType === "social"
-              ? "socialLinks"
-              : addType === "feature"
-              ? "features"
-              : "projects"]: updatedData,
-          }),
-        }
-      )
+      const response = await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          [addType === "social" ? "socialLinks" : addType === "feature" ? "features" : "projects"]: updatedData,
+        }),
+      })
 
       if (response.ok) {
         onUpdate(addType, updatedData)
-        setIsOpen(false)
+        setAddType(null)
         setNewItem("")
         setNewSocialLink("")
-        setNewProject({
-          title: "",
-          description: "",
-          link: "",
-          timeline: "",
-          coverImage: "",
-        })
-        showToast(`New ${addType} added successfully.`)
+        setNewProject({ title: "", description: "", link: "", timeline: "", coverImage: "" })
+        toast.success(`New ${addType} added successfully.`)
         refetchData()
-      } else {
-        throw new Error("Failed to update")
-      }
+      } else throw new Error("Failed to update")
     } catch (error) {
       console.error(`Error adding ${addType}:`, error)
-      showToast(`Failed to add new ${addType}.`)
+      toast.error(`Failed to add new ${addType}.`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleCoverImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const storageRef = ref(storage, `projects/${file.name}`)
-      const uploadTask = uploadBytesResumable(storageRef, file)
+    if (!file) return
+    const storageRef = ref(storage, `projects/${file.name}`)
+    const uploadTask = uploadBytesResumable(storageRef, file)
 
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          setImageUploadProgress(progress)
-        },
-        (error) => {
-          console.error("Error uploading image:", error)
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-            setNewProject((prevProject) => ({
-              ...prevProject,
-              coverImage: downloadURL,
-            }))
-          } catch (err) {
-            console.error("Failed to get download URL:", err)
-          }
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        setImageUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+      },
+      (error) => {
+        console.error("Error uploading image:", error)
+        toast.error("Failed to upload image")
+      },
+      async () => {
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+          setNewProject((p) => ({ ...p, coverImage: downloadURL }))
+          setImageUploadProgress(0)
+        } catch (err) {
+          console.error("Failed to get download URL:", err)
+          toast.error("Failed to get image URL")
         }
-      )
-    }
+      },
+    )
   }
 
+  const dockItems = [
+    { type: "social" as AddItemType, icon: Users, label: "Social", tooltip: "Add Social Media" },
+    { type: "feature" as AddItemType, icon: Star, label: "Skills", tooltip: "Add Skills/Features" },
+    { type: "project" as AddItemType, icon: Briefcase, label: "Project", tooltip: "Add Project" },
+  ]
+
+  const handleDockClick = (type: AddItemType) => {
+    if (addType === type) {
+      setAddType(null) // close if same button clicked
+    } else {
+      setAddType(type) // open modal for this button
+    }
+  }
+  
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-10">
-        {isOpen && (
-          <div className="absolute bottom-16 right-0 bg-white dark:bg-dark rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-80">
-            {!addType ? (
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New Item</h3>
-                <Button
-                  onClick={() => setAddType("social")}
-                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Add Social Media
-                </Button>
-                <Button
-                  onClick={() => setAddType("feature")}
-                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Add Skill/Feature
-                </Button>
-                <Button
-                  onClick={() => setAddType("project")}
-                  className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  Add Project
-                </Button>
-              </div>
-            ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  handleAdd()
-                }}
-                className="space-y-4"
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Add {addType === "social" ? "Social Media" : addType === "feature" ? "Skill/Feature" : "Project"}
-                  </h3>
-                  <Button
-                    type="button"
-                    onClick={() => setAddType(null)}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    <FaTimes size={16} />
-                  </Button>
-                </div>
+      {/* Background Overlay */}
+      <AnimatePresence>
+        {addType && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+            onClick={() => setAddType(null)} />
+        )}
+      </AnimatePresence>
 
+      {/* Add Form Modal */}
+      <AnimatePresence>
+      {addType && (
+        <Portal >
+          
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 20 }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      className="fixed inset-0 flex items-end justify-center z-50 bottom-24" // margin above dock
+    >
+            <div className="bg-light dark:bg-dark rounded-2xl shadow-2xl border p-6 min-w-[400px] max-w-[500px]">
+              <h3 className="text-xl font-semibold mb-6">Add {dockItems.find((i) => i.type === addType)?.label}</h3>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleAdd() }} className="space-y-4">
                 {addType === "social" && (
                   <div>
-                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Social Media URL
-                    </Label>
-                    <Input
-                      type="url"
-                      value={newSocialLink}
-                      onChange={(e) => setNewSocialLink(e.target.value)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://twitter.com/username or https://instagram.com/username"
-                      required
-                    />
+                    <Label>Social Media URL</Label>
+                    <Input type="url" value={newSocialLink} onChange={(e) => setNewSocialLink(e.target.value)}
+                      className="w-full bg-light dark:bg-dark" placeholder="https://twitter.com/username" required />
                     {newSocialLink && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Detected platform: {detectSocialPlatform(newSocialLink) || "Unknown"}
-                      </p>
+                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        className="text-xs mt-2 flex items-center gap-2">
+                        <Check size={12} /> Detected: {detectSocialPlatform(newSocialLink) || "Unknown platform"}
+                      </motion.p>
                     )}
                   </div>
                 )}
 
                 {addType === "feature" && (
                   <div>
-                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                      Skill or Feature
-                    </Label>
-                    <Input
-                      type="text"
-                      value={newItem}
-                      onChange={(e) => setNewItem(e.target.value)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., React, UI/UX Design, Project Management"
-                      required
-                    />
+                    <Label>Skill or Feature</Label>
+                    <Input type="text" value={newItem} onChange={(e) => setNewItem(e.target.value)}
+                      className="w-full bg-light dark:bg-dark" placeholder="e.g., React, UI/UX Design" required />
                   </div>
                 )}
 
                 {addType === "project" && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                     <div>
-                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Project Title
-                      </Label>
-                      <Input
-                        type="text"
-                        value={newProject.title}
-                        onChange={(e) =>
-                          setNewProject({
-                            ...newProject,
-                            title: e.target.value,
-                          })
-                        }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter project title"
-                        required
-                      />
+                      <Label>Project Title</Label>
+                      <Input type="text" value={newProject.title}
+                        onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+                        className="w-full bg-light dark:bg-dark" placeholder="Enter project title" required />
                     </div>
                     <div>
-                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Description
-                      </Label>
-                      <Textarea
-                        value={newProject.description}
-                        onChange={(e) =>
-                          setNewProject({
-                            ...newProject,
-                            description: e.target.value,
-                          })
-                        }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter project description"
-                        rows={3}
-                        required
-                      />
+                      <Label>Description</Label>
+                      <Textarea value={newProject.description}
+                        onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                        className="w-full bg-light dark:bg-dark" placeholder="Enter project description" rows={3} required />
                     </div>
                     <div>
-                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Project Link
-                      </Label>
-                      <Input
-                        type="url"
-                        value={newProject.link}
-                        onChange={(e) =>
-                          setNewProject({ ...newProject, link: e.target.value })
-                        }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="https://project-url.com"
-                        required
-                      />
+                      <Label>Project Link</Label>
+                      <Input type="url" value={newProject.link}
+                        onChange={(e) => setNewProject({ ...newProject, link: e.target.value })}
+                        className="w-full bg-light dark:bg-dark" placeholder="https://project-url.com" required />
                     </div>
                     <div>
-                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Timeline
-                      </Label>
-                      <Input
-                        type="date"
-                        value={newProject.timeline}
-                        onChange={(e) =>
-                          setNewProject({
-                            ...newProject,
-                            timeline: e.target.value,
-                          })
-                        }
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
+                      <Label>Timeline</Label>
+                      <Input type="date" value={newProject.timeline}
+                        onChange={(e) => setNewProject({ ...newProject, timeline: e.target.value })}
+                        className="w-full bg-light dark:bg-dark" required />
                     </div>
                     <div>
-                      <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Cover Image
-                      </Label>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCoverImageUpload}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <Label>Cover Image</Label>
+                      <div className="relative">
+                        <Input type="file" accept="image/*" onChange={handleCoverImageUpload}
+                          className="w-full bg-light dark:bg-dark" />
+                        {imageUploadProgress > 0 && imageUploadProgress < 100 && (
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${imageUploadProgress}%` }}
+                            className="absolute bottom-0 left-0 h-1 bg-dark rounded-full" />
+                        )}
+                      </div>
                       {newProject.coverImage && (
-                        <Image
-                          src={newProject.coverImage}
-                          alt="Cover preview"
-                          className="mt-2 w-32 h-32 object-cover border rounded-lg dark:border-white border-black"
-                          height={128}
-                          width={128}
-                        />
-                      )}
-                      {imageUploadProgress > 0 && imageUploadProgress < 100 && (
-                        <div className="mt-2 text-sm text-gray-500">
-                          Uploading... {imageUploadProgress.toFixed(0)}%
-                        </div>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3">
+                          <Image src={newProject.coverImage} alt="Cover preview"
+                            className="w-24 h-24 object-cover rounded-lg border" height={96} width={96} />
+                        </motion.div>
                       )}
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    type="button"
-                    onClick={() => setAddType(null)}
-                    className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    Add {addType === "social" ? "Social" : addType === "feature" ? "Skill" : "Project"}
+                <div className="flex gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setAddType(null)}
+                    className="flex-1 bg-light dark:bg-dark" disabled={isLoading}>Cancel</Button>
+                  <Button type="submit" className="flex-1 bg-dark text-white dark:bg-light dark:text-black"
+                    disabled={isLoading}>
+                    {isLoading ? (
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    ) : `Add ${dockItems.find((i) => i.type === addType)?.label}`}
                   </Button>
                 </div>
               </form>
-            )}
-          </div>
+            </div>
+          </motion.div>
+
+        </Portal>
         )}
-        <BorderStyleButton
-          onClick={() => setIsOpen(!isOpen)}
-          title={
-            isOpen ? (
-              <div className="flex items-center text-sm">
-                Close <IoClose className="ml-2" />
-              </div>
-            ) : (
-              <div className="flex items-center text-sm">
-                Add <IoAdd className="ml-2" />
-              </div>
-            )
-          }
-        />
+      </AnimatePresence>
+
+      {/* Dock Buttons */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        <motion.div className="bg-light dark:bg-dark rounded-2xl shadow-2xl border p-2">
+          <div className="flex items-center gap-2">
+            {dockItems.map((item, index) => {
+              const isActive = addType === item.type
+              return (
+                <motion.button key={item.type} initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }}
+                  onClick={() => handleDockClick(item.type)}
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 group
+                    ${isActive ? "bg-red-500 text-white" : "bg-light dark:bg-dark text-black dark:text-white"}`}
+                  whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }}
+                  title={item.tooltip}>
+                  {isActive ? <X size={18} /> : <item.icon size={18} className="group-hover:scale-110 transition-transform duration-200" />}
+                </motion.button>
+              )
+            })}
+          </div>
+        </motion.div>
       </div>
-      {toast.visible && <Toast message={toast.message} onClose={hideToast} />}
     </>
   )
 }
