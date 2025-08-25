@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import Portal from "@/components/Portal"
+import SharePresssenceButton from "./SharePresssenceButton"
 
 type AddItemType = "social" | "feature" | "project"
 
@@ -272,12 +273,16 @@ const FloatingAddButton = ({ socialMediaLinks, features, projects, onUpdate, ref
 
       {/* Dock Buttons */}
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-        <motion.div className="bg-light dark:bg-dark rounded-2xl shadow-2xl border p-2">
+        <motion.div className="bg-light dark:bg-dark rounded-2xl shadow-2xl border dark:border-white border-black p-2">
           <div className="flex items-center gap-2">
+          <motion.button initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
+            <SharePresssenceButton />
+            </motion.button>
             {dockItems.map((item, index) => {
               const isActive = addType === item.type
               return (
-                <motion.button key={item.type} initial={{ opacity: 0, x: -20 }}
+                <motion.button key={item.type} initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }}
                   onClick={() => handleDockClick(item.type)}
                   className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 group

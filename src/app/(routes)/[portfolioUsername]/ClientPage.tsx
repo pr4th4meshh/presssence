@@ -88,7 +88,6 @@ export default function ClientPage() {
         {session?.data?.user?.id === profileData.userId && (
           <>
             {" "}
-            <SharePresssenceButton />{" "}
             <FloatingAddButton
               userId={profileData.userId}
               socialMediaLinks={profileData.socialMedia}
