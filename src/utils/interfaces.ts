@@ -10,6 +10,7 @@ interface SocialMediaLinks {
   medium: string
   instagram: string
   youtube: string
+  spotify: string
   [key: string]: string
 }
 

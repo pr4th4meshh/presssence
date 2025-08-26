@@ -85,6 +85,7 @@ model SocialLinks {
   figma       String?
   awwwards    String?
   dribbble    String?
+  spotify     String?
   portfolioId String    @unique @db.ObjectId
   Portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
 

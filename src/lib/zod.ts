@@ -56,6 +56,7 @@ export const formSchema = z.object({
     figma: z.string().optional(),
     awwwards: z.string().optional(),
     dribbble: z.string().optional(),
+    spotify: z.string().optional(),
   }),
   blogEnabled: z.boolean(),
   analyticsEnabled: z.boolean(),

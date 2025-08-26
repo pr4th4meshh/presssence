@@ -140,6 +140,7 @@ export async function GET(req: Request) {
             figma: true,
             awwwards: true,
             dribbble: true,
+            spotify: true,
             order: true,
           },
         },
@@ -249,6 +250,7 @@ export async function PUT(req: Request) {
         "figma",
         "awwwards",
         "dribbble",
+        "spotify",
       ]
 
       // Clean up social links before saving
