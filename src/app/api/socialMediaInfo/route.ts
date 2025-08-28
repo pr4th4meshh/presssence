@@ -25,7 +25,7 @@ export async function GET(req: Request) {
       if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
 
       const userData = await response.json();
-      responseData.githubData = {
+      responseData.github = {
         name: userData.name || "",
         username: userData.login || username,
         followers: userData.followers || 0,
