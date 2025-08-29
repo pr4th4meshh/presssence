@@ -276,10 +276,10 @@ const FloatingAddButton = ({ socialMediaLinks, features, projects, onUpdate, ref
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         <motion.div className="bg-light dark:bg-dark rounded-2xl shadow-2xl border dark:border-white border-black p-2">
           <div className="flex items-center gap-2">
-          <motion.button initial={{ opacity: 0, x: -10 }}
+          <motion.div initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
             <SharePresssenceButton />
-            </motion.button>
+            </motion.div>
             {dockItems.map((item, index) => {
               const isActive = addType === item.type
               return (

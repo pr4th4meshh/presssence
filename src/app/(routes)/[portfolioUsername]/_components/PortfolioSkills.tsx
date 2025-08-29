@@ -134,7 +134,7 @@ const EditableSkill = ({
   return (
     <div className="group relative">
       <div
-        className="dark:text-white text-black border-b border-dark py-2 px-2 relative hover:rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 uppercase text-sm"
+        className="dark:text-white text-black border-b dark:border-light border-dark py-2 px-2 relative hover:rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 uppercase text-sm"
         onClick={() => setIsEditing(true)}
       >
         {skill}

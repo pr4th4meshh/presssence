@@ -31,6 +31,7 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({
   metadata,
   platform,
 }) => {
+  const username = metadata?.username
   const profile = metadata?.[platform] as SocialProfile | undefined
 
   const renderPlatformCard = () => {
@@ -38,9 +39,7 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({
       case "github":
         return (
           <>
-            {profile?.username && (
-              <p className="text-sm mt-2 text-center">{profile?.username} </p>
-            )}
+            {username && <p className="text-sm mt-2 text-center">@{username}</p>}
             {profile?.displayName && (
               <p className="text-sm mt-1 text-center">{profile.displayName}</p>
             )}
@@ -58,9 +57,7 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({
       case "spotify":
         return (
           <>
-            {profile?.username && (
-              <p className="text-sm mt-2 text-center">{profile?.username} </p>
-            )}
+           {username && <p className="text-sm mt-2 text-center">@{username}</p>}
             {profile?.displayName && (
               <p className="text-sm mt-1 text-center">{profile.displayName}</p>
             )}
@@ -76,6 +73,45 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({
           </>
         )
 
+      case "twitter":
+        return (
+          <>
+            {username && <p className="text-sm mt-2 text-center">@{username}</p>}
+            {profile?.displayName && (
+              <p className="text-sm mt-1 text-center">{profile.displayName}</p>
+            )}
+          </>
+        )
+
+        case "instagram":
+          return (
+            <>
+              {username && <p className="text-sm mt-2 text-center">@{username}</p>}
+              {profile?.displayName && (
+                <p className="text-sm mt-1 text-center">{profile.displayName}</p>
+              )}
+            </>
+          )
+
+          case "youtube":
+            return (
+              <>
+                {username && <p className="text-sm mt-2 text-center">@{username}</p>}
+                {profile?.displayName && (
+                  <p className="text-sm mt-1 text-center">{profile.displayName}</p>
+                )}
+              </>
+            )
+
+            case "medium":
+              return (
+                <>
+                  {username && <p className="text-sm mt-2 text-center">@{username}</p>}
+                  {profile?.displayName && (
+                    <p className="text-sm mt-1 text-center">{profile.displayName}</p>
+                  )}
+                </>
+              )
       default:
         return (
           <>
@@ -93,6 +129,8 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({
         )
     }
   }
+
+  console.log("Metadata", metadata)
 
   return (
     <div className="flex flex-col justify-center items-center border dark:border-light border-dark rounded-3xl p-4 h-[75px] sm:h-[150px] sm:w-[150px] w-[75px]">

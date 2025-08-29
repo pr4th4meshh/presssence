@@ -246,6 +246,8 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
     return null
   }
 
+  console.log("socialmediaviaexternalapi", socialMediaDataViaExternalApi)
+
   return (
     <div className="py-20 container mx-auto px-4">
       <h1 className="pb-4 text-xl uppercase dark:text-light text-dark font-medium">
@@ -318,7 +320,11 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
                                 platform={platform}
                                 url={url}
                                 icon={Icon}
-                                metadata={metadata}
+                                metadata={{
+                                  platform,
+                                  username: metadata?.username,  
+                                  ...metadata                     
+                                }}
                               />
                             </div>
                           )}
