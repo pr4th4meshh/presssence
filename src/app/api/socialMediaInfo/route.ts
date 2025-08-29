@@ -71,7 +71,7 @@ export async function GET(req: Request) {
       if (!response.ok) throw new Error(`Spotify API error: ${response.status}`);
     
       const spotifyUser = await response.json();
-      responseData.spotifyData = {
+      responseData.spotify = {
         displayName: spotifyUser.display_name || "",
         followers: spotifyUser.followers?.total || 0,
         avatar: spotifyUser.images?.[0]?.url || "",

@@ -15,7 +15,7 @@ import {
   DragDropContext,
   Droppable,
   Draggable,
-  DropResult
+  DropResult,
 } from "@hello-pangea/dnd"
 import { toast } from "sonner"
 
@@ -29,12 +29,12 @@ interface IProject {
   position?: number
 }
 
-const EditableProject = ({ 
-  project, 
-  index, 
-  onSave, 
-  onRemove, 
-  isOwner 
+const EditableProject = ({
+  project,
+  index,
+  onSave,
+  onRemove,
+  isOwner,
 }: {
   project: IProject
   index: number
@@ -54,7 +54,7 @@ const EditableProject = ({
   useEffect(() => {
     if (isEditing && JSON.stringify(editProject) !== JSON.stringify(project)) {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
-      
+
       timeoutRef.current = setTimeout(async () => {
         setIsSaving(true)
         try {
@@ -72,7 +72,7 @@ const EditableProject = ({
   }, [editProject, project, isEditing, index, onSave])
 
   const handleInputChange = (field: keyof IProject, value: string) => {
-    setEditProject(prev => ({ ...prev, [field]: value }))
+    setEditProject((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +106,7 @@ const EditableProject = ({
       },
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-        setEditProject(prev => ({ ...prev, coverImage: downloadURL }))
+        setEditProject((prev) => ({ ...prev, coverImage: downloadURL }))
         setUploading(false)
         setImagePreview(null)
         setSelectedFile(null)
@@ -115,7 +115,7 @@ const EditableProject = ({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       setEditProject(project)
       setIsEditing(false)
     }
@@ -140,17 +140,17 @@ const EditableProject = ({
               <Button
                 variant="destructive"
                 onClick={() => {
-                  setIsEditing(false);
-                  onRemove(index);
+                  setIsEditing(false)
+                  onRemove(index)
                 }}
                 className="hover:bg-red-600"
               >
                 <FiTrash2 size={16} />
               </Button>
-              <Button 
-                onClick={() => { 
-                  setEditProject(project); 
-                  setIsEditing(false); 
+              <Button
+                onClick={() => {
+                  setEditProject(project)
+                  setIsEditing(false)
                 }}
                 variant="outline"
               >
@@ -165,7 +165,7 @@ const EditableProject = ({
               <Input
                 type="text"
                 value={editProject.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
+                onChange={(e) => handleInputChange("title", e.target.value)}
                 onKeyDown={handleKeyDown}
                 autoFocus
               />
@@ -174,7 +174,9 @@ const EditableProject = ({
               <Label>Description</Label>
               <Textarea
                 value={editProject.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 onKeyDown={handleKeyDown}
                 rows={3}
               />
@@ -184,7 +186,7 @@ const EditableProject = ({
               <Input
                 type="url"
                 value={editProject.link}
-                onChange={(e) => handleInputChange('link', e.target.value)}
+                onChange={(e) => handleInputChange("link", e.target.value)}
                 onKeyDown={handleKeyDown}
               />
             </div>
@@ -193,18 +195,34 @@ const EditableProject = ({
               <Input
                 type="date"
                 value={editProject.timeline}
-                onChange={(e) => handleInputChange('timeline', e.target.value)}
+                onChange={(e) => handleInputChange("timeline", e.target.value)}
                 onKeyDown={handleKeyDown}
               />
             </div>
             <div>
               <Label>Cover Image</Label>
-              <Input type="file" accept="image/*" onChange={handleImageChange} />
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
               {imagePreview && (
                 <div className="mt-2">
-                  <Image height={128} width={128} src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded" />
-                  <Button onClick={handleUploadImage} disabled={uploading} className="mt-2">
-                    {uploading ? `Uploading ${uploadProgress.toFixed(0)}%` : 'Upload Image'}
+                  <Image
+                    height={128}
+                    width={128}
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded"
+                  />
+                  <Button
+                    onClick={handleUploadImage}
+                    disabled={uploading}
+                    className="mt-2"
+                  >
+                    {uploading
+                      ? `Uploading ${uploadProgress.toFixed(0)}%`
+                      : "Upload Image"}
                   </Button>
                 </div>
               )}
@@ -221,63 +239,75 @@ const EditableProject = ({
   }
 
   return (
-    <div className="group relative cursor-pointer" onClick={() => setIsEditing(true)}>
+    <div
+      className="group relative cursor-pointer"
+      onClick={() => setIsEditing(true)}
+    >
       <ProjectCard project={project} />
     </div>
   )
 }
 
-const PortfolioProjects = ({ initialProjects }: { initialProjects: { projects: IProject[]; userId: string } }) => {
+const PortfolioProjects = ({
+  initialProjects,
+}: {
+  initialProjects: { projects: IProject[]; userId: string }
+}) => {
   const [projects, setProjects] = useState<IProject[]>(initialProjects.projects)
   const { data: session } = useSession()
   const params = useParams()
 
   const isOwner = session?.user?.id === initialProjects.userId
 
-  const handleUpdateProject = async (index: number, updatedProject: IProject) => {
+  const handleUpdateProject = async (
+    index: number,
+    updatedProject: IProject
+  ) => {
     const updatedProjects = [...projects]
     updatedProjects[index] = updatedProject
     await handleSaveProjects(updatedProjects)
   }
 
   const handleRemoveProject = async (index: number) => {
-    const projectToDelete = projects[index];
-    
+    const projectToDelete = projects[index]
+
     if (!projectToDelete.id) {
       // Handle case where project doesnt have an ID (shouldnt happen)
-      const updatedProjects = projects.filter((_, i) => i !== index);
-      setProjects(updatedProjects);
-      await handleSaveProjects(updatedProjects);
-      return;
+      const updatedProjects = projects.filter((_, i) => i !== index)
+      setProjects(updatedProjects)
+      await handleSaveProjects(updatedProjects)
+      return
     }
-  
+
     try {
       const response = await fetch(`/api/projects/${projectToDelete.id}`, {
-        method: 'DELETE',
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to delete project');
-      }
-  
-      // Update local state
-      const updatedProjects = projects.filter((_, i) => i !== index);
-      setProjects(updatedProjects);
-      toast("Project deleted successfully!")
+        method: "DELETE",
+      })
 
+      if (!response.ok) {
+        throw new Error("Failed to delete project")
+      }
+
+      // Update local state
+      const updatedProjects = projects.filter((_, i) => i !== index)
+      setProjects(updatedProjects)
+      toast("Project deleted successfully!")
     } catch (error) {
-      console.error('Error deleting project:', error);
+      console.error("Error deleting project:", error)
       toast("Error deleting project")
     }
-  };
+  }
 
   const handleSaveProjects = async (updatedProjects: IProject[]) => {
     try {
-      const response = await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projects: updatedProjects }),
-      })
+      const response = await fetch(
+        `/api/portfolio?portfolioUsername=${params.portfolioUsername}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projects: updatedProjects }),
+        }
+      )
       if (response.ok) {
         setProjects(updatedProjects)
       } else {
@@ -292,17 +322,17 @@ const PortfolioProjects = ({ initialProjects }: { initialProjects: { projects: I
 
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return
-    
+
     const reordered = Array.from(projects)
     const [moved] = reordered.splice(result.source.index, 1)
     reordered.splice(result.destination.index, 0, moved)
-    
+
     // Update positions based on new order
     const updatedWithPositions = reordered.map((project, index) => ({
       ...project,
-      position: index
+      position: index,
     }))
-    
+
     setProjects(updatedWithPositions)
     if (isOwner) await handleSaveProjects(updatedWithPositions)
   }
@@ -310,7 +340,9 @@ const PortfolioProjects = ({ initialProjects }: { initialProjects: { projects: I
   return (
     projects.length > 0 && (
       <div className="py-32 container mx-auto px-4">
-        <h1 className="text-center pb-10 text-2xl uppercase dark:text-light text-dark">Projects</h1>
+        <h1 className="pb-4 text-xl uppercase dark:text-light text-dark font-medium">
+          projects:
+        </h1>
 
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable

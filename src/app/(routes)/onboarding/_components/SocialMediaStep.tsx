@@ -44,6 +44,7 @@ const socialLinksKeys = [
   "figma",
   "awwwards",
   "dribbble",
+  "spotify"
 ] as const
 
 type SocialLinkKey = (typeof socialLinksKeys)[number]

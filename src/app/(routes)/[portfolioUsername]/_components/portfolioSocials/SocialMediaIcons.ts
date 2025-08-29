@@ -9,6 +9,7 @@ import {
     FaLinkedin,
     FaBehance,
     FaFigma,
+    FaSpotify,
   } from "react-icons/fa6"
   import { FaProjectDiagram } from "react-icons/fa"
   
@@ -24,5 +25,6 @@ import {
     behance: FaBehance,
     figma: FaFigma,
     awwwards: FaProjectDiagram,
+    spotify: FaSpotify,
   }
   

@@ -62,6 +62,7 @@ const FloatingAddButton = ({ socialMediaLinks, features, projects, onUpdate, ref
     if (urlLower.includes("behance.net")) return "behance"
     if (urlLower.includes("figma.com")) return "figma"
     if (urlLower.includes("awwwards.com")) return "awwwards"
+    if (urlLower.includes("open.spotify.com")) return "spotify"
     return null
   }
 
