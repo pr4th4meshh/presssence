@@ -1,0 +1,209 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: Inter;
+  src: url("./fonts/Inter.ttf");
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 82%;
+    --input: 0 0% 82%;
+    --ring: 0 0% 4%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 83%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+* {
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  scrollbar-width: none;
+}
+
+/* ─── Theme: Creative ─────────────────────────────────────── */
+[data-theme="creative"] {
+  --background: 270 50% 7%;
+  --foreground: 0 0% 95%;
+  --card: 270 42% 12%;
+  --card-foreground: 0 0% 95%;
+  --popover: 270 42% 12%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 295 80% 65%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 270 35% 17%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 270 35% 15%;
+  --muted-foreground: 270 20% 62%;
+  --accent: 295 80% 65%;
+  --accent-foreground: 0 0% 98%;
+  --border: 270 30% 20%;
+  --input: 270 30% 20%;
+  --ring: 295 80% 65%;
+}
+
+/* Profession accent + hero text */
+[data-theme="creative"] .portfolio-profession { color: #e879f9 !important; }
+[data-theme="creative"] .portfolio-name { color: #fff !important; }
+[data-theme="creative"] .portfolio-name-gradient {
+  background: linear-gradient(135deg, #e879f9, #a855f7, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="creative"] .portfolio-headline { color: #c4b5fd !important; }
+[data-theme="creative"] .section-label { color: #a78bfa !important; }
+[data-theme="creative"] .section-border { border-color: rgba(139,92,246,0.25) !important; }
+[data-theme="creative"] .skill-badge {
+  background: rgba(139,92,246,0.18) !important;
+  color: #e9d5ff !important;
+  border-color: rgba(139,92,246,0.35) !important;
+}
+[data-theme="creative"] .project-card-bg {
+  background: rgba(88,28,135,0.28) !important;
+  border-color: rgba(139,92,246,0.3) !important;
+}
+[data-theme="creative"] .project-card-title { color: #fff !important; }
+[data-theme="creative"] .project-card-desc { color: #c4b5fd !important; }
+[data-theme="creative"] .project-card-date { color: #a78bfa !important; }
+[data-theme="creative"] .project-card-link { color: #e879f9 !important; }
+[data-theme="creative"] .project-card-link:hover { color: #f0abfc !important; }
+
+/* ─── Theme: Professional ─────────────────────────────────── */
+[data-theme="professional"] {
+  --background: 220 50% 6%;
+  --foreground: 0 0% 95%;
+  --card: 220 45% 11%;
+  --card-foreground: 0 0% 95%;
+  --popover: 220 45% 11%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 38 92% 50%;
+  --primary-foreground: 220 50% 6%;
+  --secondary: 220 38% 16%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 220 38% 14%;
+  --muted-foreground: 220 18% 60%;
+  --accent: 38 92% 50%;
+  --accent-foreground: 220 50% 6%;
+  --border: 220 30% 18%;
+  --input: 220 30% 18%;
+  --ring: 38 92% 50%;
+}
+
+[data-theme="professional"] .portfolio-profession { color: #f59e0b !important; }
+[data-theme="professional"] .portfolio-name { color: #f1f5f9 !important; letter-spacing: -0.02em; }
+[data-theme="professional"] .portfolio-headline { color: #94a3b8 !important; }
+[data-theme="professional"] .section-label { color: #64748b !important; }
+[data-theme="professional"] .section-border { border-color: rgba(100,116,139,0.2) !important; }
+[data-theme="professional"] .skill-badge {
+  background: rgba(245,158,11,0.1) !important;
+  color: #fcd34d !important;
+  border-color: rgba(245,158,11,0.25) !important;
+}
+[data-theme="professional"] .project-card-bg {
+  background: rgba(15,23,42,0.9) !important;
+  border-color: rgba(100,116,139,0.2) !important;
+}
+[data-theme="professional"] .project-card-title { color: #f1f5f9 !important; }
+[data-theme="professional"] .project-card-desc { color: #94a3b8 !important; }
+[data-theme="professional"] .project-card-date { color: #64748b !important; }
+[data-theme="professional"] .project-card-link { color: #f59e0b !important; }
+[data-theme="professional"] .project-card-link:hover { color: #fbbf24 !important; }
+
+/* ─── Theme: Bold ─────────────────────────────────────────── */
+[data-theme="bold"] {
+  --background: 0 0% 3%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 7%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 7%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 180 100% 45%;
+  --primary-foreground: 0 0% 3%;
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 180 100% 45%;
+  --accent-foreground: 0 0% 3%;
+  --border: 0 0% 14%;
+  --input: 0 0% 14%;
+  --ring: 180 100% 45%;
+}
+
+[data-theme="bold"] .portfolio-profession { color: #00e5ff !important; }
+[data-theme="bold"] .portfolio-name { color: #fff !important; text-transform: uppercase; letter-spacing: -0.02em; }
+[data-theme="bold"] .portfolio-headline { color: #9ca3af !important; }
+[data-theme="bold"] .section-label { color: #6b7280 !important; }
+[data-theme="bold"] .section-border { border-color: rgba(255,255,255,0.06) !important; }
+[data-theme="bold"] .skill-badge {
+  background: rgba(0,229,255,0.08) !important;
+  color: #00e5ff !important;
+  border-color: rgba(0,229,255,0.2) !important;
+}
+[data-theme="bold"] .project-card-bg {
+  background: #111 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+[data-theme="bold"] .project-card-title { color: #fff !important; }
+[data-theme="bold"] .project-card-desc { color: #9ca3af !important; }
+[data-theme="bold"] .project-card-date { color: #6b7280 !important; }
+[data-theme="bold"] .project-card-link { color: #00e5ff !important; }
+[data-theme="bold"] .project-card-link:hover { color: #67e8f9 !important; }
+
+.customFormScrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+}
+
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
