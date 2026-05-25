@@ -62,14 +62,32 @@ model Portfolio {
   profession  String
   headline    String?
   theme       String       @default("modern")
+  blogEnabled Boolean      @default(false)
   socialMedia SocialLinks?
   features    String[]
   projects    Project[]
+  blogPosts   BlogPost[]
   userId      String       @unique @db.ObjectId
   User        User         @relation(fields: [userId], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   isExisting  Boolean      @default(false)
+}
+
+model BlogPost {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  slug        String
+  content     String
+  excerpt     String?
+  coverImage  String?
+  published   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  portfolioId String    @db.ObjectId
+  Portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+
+  @@unique([portfolioId, slug])
 }
 
 model SocialLinks {
