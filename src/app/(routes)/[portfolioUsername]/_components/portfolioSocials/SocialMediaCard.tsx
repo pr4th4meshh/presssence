@@ -33,112 +33,49 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({
 }) => {
   const username = metadata?.username
   const profile = metadata?.[platform] as SocialProfile | undefined
-
-  const renderPlatformCard = () => {
-    switch (platform) {
-      case "github":
-        return (
-          <>
-            {username && <p className="text-sm mt-2 text-center">@{username}</p>}
-            {profile?.displayName && (
-              <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-            )}
-            {profile?.bio && (
-              <p className="text-xs text-muted-foreground mt-1">{profile.bio}</p>
-            )}
-            {typeof profile?.followers === "number" && (
-              <p className="text-xs text-gray-500">
-                {profile.followers} followers
-              </p>
-            )}
-          </>
-        )
-
-      case "spotify":
-        return (
-          <>
-           {username && <p className="text-sm mt-2 text-center">@{username}</p>}
-            {profile?.displayName && (
-              <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-            )}
-            {typeof profile?.followers === "number" && (
-              <p className="text-xs text-gray-500">
-                {profile.followers === 1
-                  ? "1 follower"
-                  : profile.followers === 0
-                  ? "No followers"
-                  : `${profile.followers} followers`}
-              </p>
-            )}
-          </>
-        )
-
-      case "twitter":
-        return (
-          <>
-            {username && <p className="text-sm mt-2 text-center">@{username}</p>}
-            {profile?.displayName && (
-              <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-            )}
-          </>
-        )
-
-        case "instagram":
-          return (
-            <>
-              {username && <p className="text-sm mt-2 text-center">@{username}</p>}
-              {profile?.displayName && (
-                <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-              )}
-            </>
-          )
-
-          case "youtube":
-            return (
-              <>
-                {username && <p className="text-sm mt-2 text-center">@{username}</p>}
-                {profile?.displayName && (
-                  <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-                )}
-              </>
-            )
-
-            case "medium":
-              return (
-                <>
-                  {username && <p className="text-sm mt-2 text-center">@{username}</p>}
-                  {profile?.displayName && (
-                    <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-                  )}
-                </>
-              )
-      default:
-        return (
-          <>
-            {profile?.avatar && (
-              <img
-                src={profile.avatar}
-                alt={profile.displayName || "User Avatar"}
-                className="w-10 h-10 rounded-full mt-2"
-              />
-            )}
-            {profile?.displayName && (
-              <p className="text-sm mt-1 text-center">{profile.displayName}</p>
-            )}
-          </>
-        )
-    }
-  }
+  const displayName = profile?.displayName
+  const followers = profile?.followers
+  const bio = profile?.bio
 
   return (
-    <div className="flex flex-col justify-center items-center border border-border rounded-3xl p-4 h-[75px] sm:h-[150px] sm:w-[150px] w-[75px]">
-      <Link href={url} target="_blank" rel="noopener noreferrer">
+    <div className="flex flex-col items-center border border-border rounded-2xl sm:rounded-3xl p-2 sm:p-4 w-full min-h-[90px] sm:min-h-[150px] transition-colors hover:bg-muted/40">
+      <Link
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-center mt-1 sm:mt-2"
+      >
         <span className="flex items-center justify-center dark:text-white text-black">
-          {React.createElement(icon, { className: "text-3xl sm:text-5xl" })}
+          {React.createElement(icon, { className: "text-[1.6rem] sm:text-5xl" })}
         </span>
       </Link>
 
-      {renderPlatformCard()}
+      <div className="flex flex-col items-center w-full mt-1 sm:mt-2 gap-0.5 overflow-hidden">
+        {username && (
+          <p className="text-[10px] sm:text-xs font-medium truncate w-full text-center leading-tight">
+            @{username}
+          </p>
+        )}
+        {displayName && !username && (
+          <p className="text-[10px] sm:text-xs font-medium truncate w-full text-center leading-tight">
+            {displayName}
+          </p>
+        )}
+        {platform === "github" && bio && (
+          <p className="hidden sm:block text-xs text-muted-foreground line-clamp-2 text-center leading-tight">
+            {bio}
+          </p>
+        )}
+        {typeof followers === "number" && (
+          <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">
+            {followers === 0
+              ? "No followers"
+              : followers === 1
+              ? "1 follower"
+              : `${followers.toLocaleString()} followers`}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

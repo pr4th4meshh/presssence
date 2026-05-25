@@ -283,7 +283,7 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className="grid sm:grid-cols-5 grid-cols-3 gap-6 sm:gap-4"
+                  className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4"
                 >
                   {socialMediaArray.map(
                     (
