@@ -231,56 +231,53 @@ export async function PUT(req: Request) {
         }
       }
 
-      // Define all supported platforms (must match your Prisma model fields)
-      const supportedPlatforms = [
-        "twitter",
-        "linkedin",
-        "github",
-        "instagram",
-        "youtube",
-        "medium",
-        "website",
-        "behance",
-        "figma",
-        "awwwards",
-        "dribbble",
-        "spotify",
-      ]
+      // Only update social links if they were explicitly included in the payload
+      if (updateData.socialLinks !== undefined) {
+        const supportedPlatforms = [
+          "twitter",
+          "linkedin",
+          "github",
+          "instagram",
+          "youtube",
+          "medium",
+          "website",
+          "behance",
+          "figma",
+          "awwwards",
+          "dribbble",
+          "spotify",
+        ]
 
-      // Clean up social links before saving
-      const rawLinks = (updateData.socialLinks as Record<string, string>) || {}
+        const rawLinks = (updateData.socialLinks as Record<string, string>) || {}
 
-      // Remove empty strings from socialLinks
-      const cleanLinks: Record<string, string> = {}
-      for (const [platform, url] of Object.entries(rawLinks)) {
-        if (typeof url === "string" && url.trim()) {
-          cleanLinks[platform] = url.trim()
+        const cleanLinks: Record<string, string> = {}
+        for (const [platform, url] of Object.entries(rawLinks)) {
+          if (typeof url === "string" && url.trim()) {
+            cleanLinks[platform] = url.trim()
+          }
         }
+
+        const cleanOrder = (updateData.socialLinksOrder || []).filter(
+          (platform: string) => cleanLinks[platform]
+        )
+
+        const updateSocialData: Record<string, string | string[]> = {
+          order: cleanOrder,
+        }
+
+        for (const platform of supportedPlatforms) {
+          updateSocialData[platform] = cleanLinks[platform] || ""
+        }
+
+        await tx.socialLinks.upsert({
+          where: { portfolioId: portfolio.id },
+          update: updateSocialData,
+          create: {
+            portfolioId: portfolio.id,
+            ...updateSocialData,
+          },
+        })
       }
-
-      // Ensure order only contains valid platforms
-      const cleanOrder = (updateData.socialLinksOrder || []).filter(
-        (platform: string) => cleanLinks[platform]
-      )
-
-      // Build the full update object
-      const updateSocialData: Record<string, string | string[]> = {
-        order: cleanOrder,
-      }
-
-      // Ensure every platform is included (empty if missing)
-      for (const platform of supportedPlatforms) {
-        updateSocialData[platform] = cleanLinks[platform] || ""
-      }
-
-      await tx.socialLinks.upsert({
-        where: { portfolioId: portfolio.id },
-        update: updateSocialData,
-        create: {
-          portfolioId: portfolio.id,
-          ...updateSocialData,
-        },
-      })
     })
 
     const updatedPortfolio = await prisma.portfolio.findFirst({

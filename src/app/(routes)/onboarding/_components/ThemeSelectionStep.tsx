@@ -23,7 +23,6 @@ export default function ThemeSelectionStep({ watch, setValue }: ThemeSelectionSt
       <div className="space-y-2">
         <Label htmlFor="theme" className="block text-sm font-medium">Choose Your Theme</Label>
         <Select
-          disabled
           value={watch("theme")}
           onValueChange={(value) => setValue("theme", value as "modern" | "bold" | "creative" | "professional")}
         >
@@ -42,6 +41,7 @@ export default function ThemeSelectionStep({ watch, setValue }: ThemeSelectionSt
           className="w-full mt-2 px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none"
           onClick={() => null}
           disabled
+          hidden
         >
           <FaPalette className="inline-block mr-2" />
           Generate AI Color Scheme
