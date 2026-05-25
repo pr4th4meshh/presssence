@@ -24,7 +24,6 @@ const CTAComponent = () => {
               className="font-semibold text-white underline underline-offset-2 hover:text-blue-300 transition-colors inline-flex items-center gap-1"
             >
               Get started free
-              <FiArrowRight className="text-xs" />
             </Link>
           </span>
           <button
