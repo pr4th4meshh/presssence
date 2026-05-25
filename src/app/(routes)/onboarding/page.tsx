@@ -61,6 +61,20 @@ export default function OnboardingForm() {
       analyticsEnabled: false,
       features: [],
       projects: [{ title: "", description: "", link: "", timeline: "" }],
+      socialLinks: {
+        twitter: "",
+        linkedin: "",
+        github: "",
+        instagram: "",
+        youtube: "",
+        medium: "",
+        website: "",
+        behance: "",
+        figma: "",
+        awwwards: "",
+        dribbble: "",
+        spotify: "",
+      },
     },
   })
 
