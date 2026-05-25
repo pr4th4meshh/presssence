@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { FormFields, LoginFields, LoginSchemaFrontend } from "@/lib/zod"
+import { FormFields, LoginFields, LoginSchemaFrontend } from "@/lib/validations"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import Link from "next/link"

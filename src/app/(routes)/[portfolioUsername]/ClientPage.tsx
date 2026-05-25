@@ -14,7 +14,7 @@ import PortfolioSocials from "./_components/PortfolioSocials"
 import CTAComponent from "./_components/CTAComponent"
 import FloatingAddButton from "./_components/FloatingAddButton"
 import NoPortfolioScreen from "./_components/NoPortfolioScreen"
-import { ProfileData } from "@/utils/interfaces"
+import { ProfileData } from "@/types"
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },

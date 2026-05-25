@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner"
 import SharePresssenceButton from "./SharePresssenceButton"
 import LogoutButton from "@/components/LogoutButton"
-import getIsOwner from "@/utils/getIsOwner"
+import useIsOwner from "@/hooks/useIsOwner"
 
 type AddItemType = "social" | "feature" | "project"
 
@@ -509,7 +509,7 @@ const FloatingAddButton = ({
                 </motion.button>
               )
             })}
-            {getIsOwner().isOwner && (
+            {useIsOwner().isOwner && (
               <LogoutButton
                 iconOnly
                 className="w-12 h-12 rounded-xl bg-muted text-red-500"

@@ -1,7 +1,7 @@
 "use client"
 
 import { UseFormRegister, FieldErrors, Control, useFieldArray, UseFormWatch } from "react-hook-form"
-import { FormData } from "@/lib/zod"
+import { FormData } from "@/lib/validations"
 import { useState } from "react"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"

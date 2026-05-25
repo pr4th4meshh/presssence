@@ -1,9 +1,9 @@
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
-import React, { useEffect, useState } from "react"
-import { ProfileData } from "./interfaces"
+import { useEffect, useState } from "react"
+import { ProfileData } from "@/types"
 
-const getIsOwner = () => {
+const useIsOwner = () => {
   const params = useParams<{ portfolioUsername: string }>()
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [portfolioExists, setPortfolioExists] = useState(true)
@@ -58,4 +58,4 @@ const getIsOwner = () => {
   }
 }
 
-export default getIsOwner
+export default useIsOwner

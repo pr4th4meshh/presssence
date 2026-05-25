@@ -1,7 +1,7 @@
 import {prisma} from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import bcrypt from "bcrypt"
-import { SignupSchema } from "@/lib/zod"
+import { SignupSchema } from "@/lib/validations"
 import { useAuth } from "@clerk/nextjs"
 
 export async function POST(req: Request) {  

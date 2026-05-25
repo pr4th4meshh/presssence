@@ -7,7 +7,7 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import PrimaryButton from "@/components/ui/primary-button"
 import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
-import { ProfileData } from "@/utils/interfaces"
+import { ProfileData } from "@/types"
 
 interface IUser {
   image: string

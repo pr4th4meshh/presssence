@@ -1,7 +1,7 @@
 "use client"
 
 import { UseFormRegister, FieldErrors, Control } from "react-hook-form"
-import { FormData } from "@/lib/zod"
+import { FormData } from "@/lib/validations"
 import { useState, KeyboardEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

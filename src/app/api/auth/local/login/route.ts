@@ -2,7 +2,7 @@ import {prisma} from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { LoginSchema } from "@/lib/zod"
+import { LoginSchema } from "@/lib/validations"
 
 export async function POST(req: Request) {
   const body = await req.json()

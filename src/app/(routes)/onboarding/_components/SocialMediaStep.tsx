@@ -1,7 +1,7 @@
 "use client"
 
 import { UseFormRegister, UseFormWatch } from "react-hook-form"
-import { FormData } from "@/lib/zod"
+import { FormData } from "@/lib/validations"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import {

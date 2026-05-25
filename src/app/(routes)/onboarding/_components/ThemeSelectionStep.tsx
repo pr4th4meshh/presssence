@@ -1,5 +1,5 @@
 import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form"
-import { FormData } from "@/lib/zod"
+import { FormData } from "@/lib/validations"
 import { FaPalette, FaChartBar, FaBook } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"

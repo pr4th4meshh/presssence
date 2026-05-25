@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form"
-import { FormData } from "@/lib/zod"
+import { FormData } from "@/lib/validations"
 import { useDebounce } from "@/hooks/useDebounce"
 import { PiSpinner } from "react-icons/pi"
 import { Input } from "@/components/ui/input"
