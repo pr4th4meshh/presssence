@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FaExternalLinkAlt } from "react-icons/fa"
-import { FiPlus } from "react-icons/fi"
+import { FiPlus, FiTrash2 } from "react-icons/fi"
 import { toast } from "sonner"
 import SocialMediaInput from "./portfolioSocials/SocialMediaInput"
 import SocialMediaCard from "./portfolioSocials/SocialMediaCard"
@@ -173,6 +173,23 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
     }
   }
 
+  const handleDeleteSocial = async (platform: string) => {
+    const updatedLinks = { ...socialMediaData.links }
+    delete updatedLinks[platform]
+    const updatedOrder = socialMediaData.order.filter((p) => p !== platform)
+    setSocialMediaData({ links: updatedLinks, order: updatedOrder })
+    try {
+      await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ socialLinks: updatedLinks, socialLinksOrder: updatedOrder }),
+      })
+      toast.success(`${platform} removed`)
+    } catch {
+      toast.error("Failed to remove social link")
+    }
+  }
+
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return
     const items = [...socialMediaArray]
@@ -293,7 +310,7 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`transition-shadow ${snapshot.isDragging ? "shadow-xl rotate-1 scale-[1.02]" : ""} ${isOwner ? "cursor-grab active:cursor-grabbing" : ""}`}
+                          className={`relative group/card transition-shadow ${snapshot.isDragging ? "shadow-xl rotate-1 scale-[1.02]" : ""} ${isOwner ? "cursor-grab active:cursor-grabbing" : ""}`}
                         >
                           <SocialMediaCard
                             platform={platform}
@@ -301,6 +318,15 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
                             icon={Icon}
                             metadata={{ platform, username: metadata?.username, ...metadata }}
                           />
+                          {isOwner && (
+                            <button
+                              onClick={(e) => { e.preventDefault(); handleDeleteSocial(platform) }}
+                              className="absolute top-2 left-2 w-6 h-6 rounded-md bg-destructive text-white backdrop-blur-sm border border-border flex items-center justify-center opacity-0 group-hover/card:opacity-100 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all"
+                              title={`Remove ${platform}`}
+                            >
+                              <FiTrash2 size={11} />
+                            </button>
+                          )}
                         </div>
                       )}
                     </Draggable>
