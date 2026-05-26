@@ -9,25 +9,25 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 4%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 4%;
+    --background: 0 0% 96%;       /* #f5f5f5 */
+    --foreground: 0 0% 7%;        /* #111 — soft black */
+    --card: 0 0% 100%;            /* white cards pop off the bg */
+    --card-foreground: 0 0% 7%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 4%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 97%;
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 7%;
+    --muted: 0 0% 92%;            /* hover states, subtle fills */
+    --muted-foreground: 0 0% 48%;
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 7%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 82%;
-    --input: 0 0% 82%;
-    --ring: 0 0% 4%;
+    --border: 0 0% 88%;           /* #e0e0e0 — barely-there borders */
+    --input: 0 0% 100%;           /* white inputs */
+    --ring: 0 0% 7%;
     --radius: 0.5rem;
   }
 
@@ -68,135 +68,185 @@
   scrollbar-width: none;
 }
 
-/* ─── Theme: Creative ─────────────────────────────────────── */
-[data-theme="creative"] {
-  --background: 270 50% 7%;
-  --foreground: 0 0% 95%;
-  --card: 270 42% 12%;
-  --card-foreground: 0 0% 95%;
-  --popover: 270 42% 12%;
-  --popover-foreground: 0 0% 95%;
-  --primary: 295 80% 65%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 270 35% 17%;
-  --secondary-foreground: 0 0% 95%;
-  --muted: 270 35% 15%;
-  --muted-foreground: 270 20% 62%;
-  --accent: 295 80% 65%;
-  --accent-foreground: 0 0% 98%;
-  --border: 270 30% 20%;
-  --input: 270 30% 20%;
-  --ring: 295 80% 65%;
+/* ─── Theme: Modern ──────────────────────────────────────── */
+/* Clean #f5f5f5 canvas — pure neutral, no color accent */
+[data-theme="modern"] {
+  --background: 0 0% 96%;
+  --foreground: 0 0% 7%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 7%;
+  --primary: 0 0% 7%;
+  --primary-foreground: 0 0% 97%;
+  --secondary: 0 0% 92%;
+  --secondary-foreground: 0 0% 7%;
+  --muted: 0 0% 92%;
+  --muted-foreground: 0 0% 48%;
+  --accent: 0 0% 92%;
+  --accent-foreground: 0 0% 7%;
+  --border: 0 0% 88%;
+  --input: 0 0% 100%;
+  --ring: 0 0% 7%;
 }
 
-/* Profession accent + hero text */
-[data-theme="creative"] .portfolio-profession { color: #e879f9 !important; }
-[data-theme="creative"] .portfolio-name { color: #fff !important; }
-[data-theme="creative"] .portfolio-name-gradient {
-  background: linear-gradient(135deg, #e879f9, #a855f7, #818cf8);
+[data-theme="modern"] .portfolio-profession { color: #555 !important; }
+[data-theme="modern"] .portfolio-name { color: #111 !important; }
+[data-theme="modern"] .portfolio-name-gradient {
+  background: linear-gradient(135deg, #111, #444);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-[data-theme="creative"] .portfolio-headline { color: #c4b5fd !important; }
-[data-theme="creative"] .section-label { color: #a78bfa !important; }
-[data-theme="creative"] .section-border { border-color: rgba(139,92,246,0.25) !important; }
+[data-theme="modern"] .portfolio-headline { color: #666 !important; }
+[data-theme="modern"] .section-label { color: #999 !important; }
+[data-theme="modern"] .section-border { border-color: #e8e8e8 !important; }
+[data-theme="modern"] .skill-badge {
+  background: #f0f0f0 !important;
+  color: #444 !important;
+  border-color: #e0e0e0 !important;
+}
+[data-theme="modern"] .project-card-bg {
+  background: #ffffff !important;
+  border-color: #e8e8e8 !important;
+}
+[data-theme="modern"] .project-card-title { color: #111 !important; }
+[data-theme="modern"] .project-card-desc { color: #666 !important; }
+[data-theme="modern"] .project-card-date { color: #999 !important; }
+[data-theme="modern"] .project-card-link { color: #333 !important; }
+[data-theme="modern"] .project-card-link:hover { color: #000 !important; }
+
+/* ─── Theme: Creative ─────────────────────────────────────── */
+/* Dreamy lavender wash — purple/violet/pink energy */
+[data-theme="creative"] {
+  --background: 270 80% 96%;      /* #f2ebff — soft lilac */
+  --foreground: 270 45% 14%;
+  --card: 270 60% 99%;            /* #fdfbff — almost white with purple breath */
+  --card-foreground: 270 45% 14%;
+  --popover: 270 60% 99%;
+  --popover-foreground: 270 45% 14%;
+  --primary: 270 78% 54%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 270 50% 92%;
+  --secondary-foreground: 270 45% 14%;
+  --muted: 270 45% 93%;
+  --muted-foreground: 270 22% 52%;
+  --accent: 295 72% 56%;
+  --accent-foreground: 0 0% 100%;
+  --border: 270 40% 86%;
+  --input: 270 60% 99%;
+  --ring: 270 78% 54%;
+}
+
+[data-theme="creative"] .portfolio-profession { color: #9333ea !important; }
+[data-theme="creative"] .portfolio-name { color: #1e1b4b !important; }
+[data-theme="creative"] .portfolio-name-gradient {
+  background: linear-gradient(135deg, #9333ea, #6366f1, #c026d3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="creative"] .portfolio-headline { color: #6d28d9 !important; }
+[data-theme="creative"] .section-label { color: #7c3aed !important; }
+[data-theme="creative"] .section-border { border-color: rgba(139,92,246,0.22) !important; }
 [data-theme="creative"] .skill-badge {
-  background: rgba(139,92,246,0.18) !important;
-  color: #e9d5ff !important;
-  border-color: rgba(139,92,246,0.35) !important;
+  background: rgba(147,51,234,0.1) !important;
+  color: #7c3aed !important;
+  border-color: rgba(139,92,246,0.28) !important;
 }
 [data-theme="creative"] .project-card-bg {
-  background: rgba(88,28,135,0.28) !important;
-  border-color: rgba(139,92,246,0.3) !important;
+  background: rgba(250,247,255,0.9) !important;
+  border-color: rgba(139,92,246,0.22) !important;
 }
-[data-theme="creative"] .project-card-title { color: #fff !important; }
-[data-theme="creative"] .project-card-desc { color: #c4b5fd !important; }
-[data-theme="creative"] .project-card-date { color: #a78bfa !important; }
-[data-theme="creative"] .project-card-link { color: #e879f9 !important; }
-[data-theme="creative"] .project-card-link:hover { color: #f0abfc !important; }
+[data-theme="creative"] .project-card-title { color: #1e1b4b !important; }
+[data-theme="creative"] .project-card-desc { color: #5b21b6 !important; }
+[data-theme="creative"] .project-card-date { color: #8b5cf6 !important; }
+[data-theme="creative"] .project-card-link { color: #9333ea !important; }
+[data-theme="creative"] .project-card-link:hover { color: #7c3aed !important; }
 
 /* ─── Theme: Professional ─────────────────────────────────── */
+/* Cool arctic blue — navy text, warm amber accents */
 [data-theme="professional"] {
-  --background: 220 50% 6%;
-  --foreground: 0 0% 95%;
-  --card: 220 45% 11%;
-  --card-foreground: 0 0% 95%;
-  --popover: 220 45% 11%;
-  --popover-foreground: 0 0% 95%;
-  --primary: 38 92% 50%;
-  --primary-foreground: 220 50% 6%;
-  --secondary: 220 38% 16%;
-  --secondary-foreground: 0 0% 95%;
-  --muted: 220 38% 14%;
-  --muted-foreground: 220 18% 60%;
-  --accent: 38 92% 50%;
-  --accent-foreground: 220 50% 6%;
-  --border: 220 30% 18%;
-  --input: 220 30% 18%;
-  --ring: 38 92% 50%;
+  --background: 214 60% 95%;      /* #e8f0fa — light steel blue */
+  --foreground: 220 45% 10%;
+  --card: 214 50% 99%;            /* #f7faff — barely blue white */
+  --card-foreground: 220 45% 10%;
+  --popover: 214 50% 99%;
+  --popover-foreground: 220 45% 10%;
+  --primary: 220 82% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 45% 91%;
+  --secondary-foreground: 220 45% 10%;
+  --muted: 214 40% 91%;
+  --muted-foreground: 220 20% 50%;
+  --accent: 38 90% 50%;
+  --accent-foreground: 220 45% 10%;
+  --border: 214 30% 84%;
+  --input: 214 50% 99%;
+  --ring: 220 82% 50%;
 }
 
-[data-theme="professional"] .portfolio-profession { color: #f59e0b !important; }
-[data-theme="professional"] .portfolio-name { color: #f1f5f9 !important; letter-spacing: -0.02em; }
-[data-theme="professional"] .portfolio-headline { color: #94a3b8 !important; }
+[data-theme="professional"] .portfolio-profession { color: #d97706 !important; }
+[data-theme="professional"] .portfolio-name { color: #0f172a !important; letter-spacing: -0.02em; }
+[data-theme="professional"] .portfolio-headline { color: #334155 !important; }
 [data-theme="professional"] .section-label { color: #64748b !important; }
-[data-theme="professional"] .section-border { border-color: rgba(100,116,139,0.2) !important; }
+[data-theme="professional"] .section-border { border-color: rgba(100,116,139,0.25) !important; }
 [data-theme="professional"] .skill-badge {
-  background: rgba(245,158,11,0.1) !important;
-  color: #fcd34d !important;
-  border-color: rgba(245,158,11,0.25) !important;
+  background: rgba(217,119,6,0.09) !important;
+  color: #b45309 !important;
+  border-color: rgba(217,119,6,0.24) !important;
 }
 [data-theme="professional"] .project-card-bg {
-  background: rgba(15,23,42,0.9) !important;
-  border-color: rgba(100,116,139,0.2) !important;
+  background: rgba(241,247,255,0.9) !important;
+  border-color: rgba(186,210,240,0.7) !important;
 }
-[data-theme="professional"] .project-card-title { color: #f1f5f9 !important; }
-[data-theme="professional"] .project-card-desc { color: #94a3b8 !important; }
-[data-theme="professional"] .project-card-date { color: #64748b !important; }
-[data-theme="professional"] .project-card-link { color: #f59e0b !important; }
-[data-theme="professional"] .project-card-link:hover { color: #fbbf24 !important; }
+[data-theme="professional"] .project-card-title { color: #0f172a !important; }
+[data-theme="professional"] .project-card-desc { color: #334155 !important; }
+[data-theme="professional"] .project-card-date { color: #94a3b8 !important; }
+[data-theme="professional"] .project-card-link { color: #d97706 !important; }
+[data-theme="professional"] .project-card-link:hover { color: #b45309 !important; }
 
 /* ─── Theme: Bold ─────────────────────────────────────────── */
+/* Minty fresh — electric teal accent on warm cream canvas */
 [data-theme="bold"] {
-  --background: 0 0% 3%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 7%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 180 100% 45%;
-  --primary-foreground: 0 0% 3%;
-  --secondary: 0 0% 12%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 55%;
-  --accent: 180 100% 45%;
-  --accent-foreground: 0 0% 3%;
-  --border: 0 0% 14%;
-  --input: 0 0% 14%;
-  --ring: 180 100% 45%;
+  --background: 158 55% 95%;      /* #e8f9f4 — soft mint */
+  --foreground: 160 30% 8%;
+  --card: 158 40% 99%;            /* #f5fdfb — near-white with mint breath */
+  --card-foreground: 160 30% 8%;
+  --popover: 158 40% 99%;
+  --popover-foreground: 160 30% 8%;
+  --primary: 172 80% 32%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 158 40% 91%;
+  --secondary-foreground: 160 30% 8%;
+  --muted: 158 35% 91%;
+  --muted-foreground: 160 18% 46%;
+  --accent: 172 80% 32%;
+  --accent-foreground: 0 0% 100%;
+  --border: 158 30% 84%;
+  --input: 158 40% 99%;
+  --ring: 172 80% 32%;
 }
 
-[data-theme="bold"] .portfolio-profession { color: #00e5ff !important; }
-[data-theme="bold"] .portfolio-name { color: #fff !important; text-transform: uppercase; letter-spacing: -0.02em; }
-[data-theme="bold"] .portfolio-headline { color: #9ca3af !important; }
+[data-theme="bold"] .portfolio-profession { color: #0d9488 !important; }
+[data-theme="bold"] .portfolio-name { color: #022c22 !important; text-transform: uppercase; letter-spacing: -0.02em; }
+[data-theme="bold"] .portfolio-headline { color: #374151 !important; }
 [data-theme="bold"] .section-label { color: #6b7280 !important; }
-[data-theme="bold"] .section-border { border-color: rgba(255,255,255,0.06) !important; }
+[data-theme="bold"] .section-border { border-color: rgba(13,148,136,0.18) !important; }
 [data-theme="bold"] .skill-badge {
-  background: rgba(0,229,255,0.08) !important;
-  color: #00e5ff !important;
-  border-color: rgba(0,229,255,0.2) !important;
+  background: rgba(13,148,136,0.09) !important;
+  color: #0d9488 !important;
+  border-color: rgba(13,148,136,0.24) !important;
 }
 [data-theme="bold"] .project-card-bg {
-  background: #111 !important;
-  border-color: rgba(255,255,255,0.07) !important;
+  background: rgba(240,253,250,0.9) !important;
+  border-color: rgba(13,148,136,0.18) !important;
 }
-[data-theme="bold"] .project-card-title { color: #fff !important; }
-[data-theme="bold"] .project-card-desc { color: #9ca3af !important; }
+[data-theme="bold"] .project-card-title { color: #022c22 !important; }
+[data-theme="bold"] .project-card-desc { color: #374151 !important; }
 [data-theme="bold"] .project-card-date { color: #6b7280 !important; }
-[data-theme="bold"] .project-card-link { color: #00e5ff !important; }
-[data-theme="bold"] .project-card-link:hover { color: #67e8f9 !important; }
+[data-theme="bold"] .project-card-link { color: #0d9488 !important; }
+[data-theme="bold"] .project-card-link:hover { color: #0f766e !important; }
 
 .customFormScrollbar {
   scrollbar-width: thin;

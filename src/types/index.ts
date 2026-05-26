@@ -22,6 +22,7 @@ export interface BlogPost {
   excerpt?: string
   coverImage?: string
   published: boolean
+  order: number
   createdAt: string
   updatedAt: string
   portfolioId: string

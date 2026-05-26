@@ -91,7 +91,7 @@ export default function ClientPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex bg-background items-center justify-center">
+      <div className="min-h-screen flex bg-[#f5f5f5] items-center justify-center">
         <Loading />
       </div>
     )
@@ -103,12 +103,10 @@ export default function ClientPage() {
 
   const isOwner = session?.data?.user?.id === profileData.userId
 
-  const isDarkTheme = theme === "creative" || theme === "professional" || theme === "bold"
-
   return (
     <AnimatePresence>
       <div
-        className={`min-h-screen bg-background${isDarkTheme ? " dark" : ""}`}
+        className="min-h-screen bg-background"
         data-theme={theme}
       >
         {!isOwner && <CTAComponent />}

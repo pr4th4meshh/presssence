@@ -123,11 +123,7 @@ export async function GET(req: Request) {
             position: "asc",
           },
         },
-        blogPosts: {
-          orderBy: {
-            createdAt: "desc",
-          },
-        },
+        blogPosts: true,
         socialMedia: {
           select: {
             twitter: true,
@@ -155,7 +151,15 @@ export async function GET(req: Request) {
       )
     }
 
-    return NextResponse.json(portfolio, { status: 200 })
+    const order: string[] = (portfolio as any).blogPostOrder ?? []
+    const sortedBlogPosts = order.length > 0
+      ? [
+          ...order.map((id) => portfolio.blogPosts.find((p) => p.id === id)).filter(Boolean),
+          ...portfolio.blogPosts.filter((p) => !order.includes(p.id)),
+        ]
+      : portfolio.blogPosts
+
+    return NextResponse.json({ ...portfolio, blogPosts: sortedBlogPosts }, { status: 200 })
   } catch (error) {
     return NextResponse.json({ message: error }, { status: 500 })
   }
@@ -202,6 +206,7 @@ export async function PUT(req: Request) {
           features: updateData.features,
           theme: updateData.theme,
           ...(updateData.blogEnabled !== undefined && { blogEnabled: updateData.blogEnabled }),
+          ...(updateData.blogPostOrder !== undefined && { blogPostOrder: updateData.blogPostOrder }),
         },
       })
 

@@ -12,7 +12,7 @@ const BlogCard = ({ post, portfolioUsername }: BlogCardProps) => {
   return (
     <Link
       href={`/${portfolioUsername}/blog/${post.slug}`}
-      className="group block project-card-bg bg-white dark:bg-neutral-900 border dark:border-neutral-800 border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl dark:hover:shadow-black/40 transition-all duration-300 hover:-translate-y-1"
+      className="group block project-card-bg bg-white border border-border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
     >
       {post.coverImage && (
         <div className="relative overflow-hidden h-[180px]">
@@ -29,7 +29,7 @@ const BlogCard = ({ post, portfolioUsername }: BlogCardProps) => {
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="project-card-title font-semibold dark:text-white text-gray-900 text-base line-clamp-2 leading-snug">
+          <h3 className="project-card-title font-semibold text-foreground text-base line-clamp-2 leading-snug">
             {post.title}
           </h3>
           {!post.published && (
@@ -41,13 +41,13 @@ const BlogCard = ({ post, portfolioUsername }: BlogCardProps) => {
         </div>
 
         {post.excerpt && (
-          <p className="project-card-desc text-sm dark:text-gray-400 text-gray-600 line-clamp-2 leading-relaxed">
+          <p className="project-card-desc text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {post.excerpt}
           </p>
         )}
 
-        <div className="mt-4 pt-4 border-t dark:border-neutral-800 border-gray-100 flex items-center justify-between">
-          <span className="project-card-date flex items-center gap-1.5 text-xs dark:text-gray-500 text-gray-400">
+        <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+          <span className="project-card-date flex items-center gap-1.5 text-xs text-muted-foreground">
             <FiCalendar size={11} className="shrink-0" />
             {new Date(post.createdAt).toLocaleDateString("en-US", {
               month: "short",
@@ -55,7 +55,7 @@ const BlogCard = ({ post, portfolioUsername }: BlogCardProps) => {
               year: "numeric",
             })}
           </span>
-          <span className="project-card-link text-xs font-medium text-blue-500 group-hover:text-blue-400 transition-colors">
+          <span className="project-card-link text-xs font-medium transition-colors">
             Read more →
           </span>
         </div>

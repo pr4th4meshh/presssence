@@ -10,7 +10,7 @@ const PortfolioFooter = () => {
           Built with{" "}
           <Link
             href="/"
-            className="dark:text-gray-300 text-gray-600 font-medium hover:dark:text-white hover:text-gray-900 transition-colors underline underline-offset-2"
+            className=" transition-colors underline underline-offset-2"
           >
             Presssence
           </Link>

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FiEdit3, FiTrash2, FiX, FiEye, FiEyeOff, FiPlus } from "react-icons/fi"
 import { toast } from "sonner"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "@hello-pangea/dnd"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import BlogCard from "./BlogCard"
@@ -114,7 +120,7 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
         })
         if (!res.ok) throw new Error()
         const created: BlogPost = await res.json()
-        setPosts((prev) => [created, ...prev])
+        setPosts((prev) => [...prev, created])
         toast.success("Post created")
       }
       setDialogOpen(false)
@@ -171,16 +177,34 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
     }
   }
 
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination || result.source.index === result.destination.index) return
+    const reordered = Array.from(visiblePosts)
+    const [moved] = reordered.splice(result.source.index, 1)
+    reordered.splice(result.destination.index, 0, moved)
+    setPosts(reordered)
+    try {
+      await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blogPostOrder: reordered.map((p) => p.id) }),
+      })
+    } catch {
+      toast.error("Failed to save order")
+    }
+  }
+
   return (
     <>
-      <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
+      <div className="section-border py-10 border-t border-border">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400">
+          <h2 className="section-label text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Blog
           </h2>
           {isOwner && (
             <div className="flex items-center gap-2">
-              <button
+              <Button
+              variant="ghost"
                 onClick={handleToggleBlogEnabled}
                 disabled={isTogglingBlog}
                 className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -188,8 +212,8 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
               >
                 {blogEnabled ? <FiEye size={13} /> : <FiEyeOff size={13} />}
                 {blogEnabled ? "Visible" : "Hidden"}
-              </button>
-              <Button size="sm" variant="outline" onClick={openCreate} className="gap-1.5 h-7 text-xs">
+              </Button>
+              <Button size="sm" variant="default" onClick={openCreate} className="gap-1.5 text-xs">
                 <FiPlus size={12} />
                 New Post
               </Button>
@@ -201,59 +225,78 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
           isOwner ? (
             <div className="text-center py-10 text-sm text-muted-foreground">
               No posts yet.{" "}
-              <button onClick={openCreate} className="underline underline-offset-2 hover:text-foreground transition-colors">
+              <button
+                onClick={openCreate}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+              >
                 Write your first post
               </button>
             </div>
           ) : null
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <AnimatePresence mode="popLayout">
-              {visiblePosts.map((post) => (
-                <motion.div
-                  key={post.id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="relative group/card"
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="blogs" direction="horizontal">
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
                 >
-                  <BlogCard post={post} portfolioUsername={params.portfolioUsername} />
+                  {visiblePosts.map((post, index) => (
+                    <Draggable
+                      key={post.id}
+                      draggableId={post.id}
+                      index={index}
+                      isDragDisabled={!isOwner}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`relative group/card transition-shadow ${
+                            snapshot.isDragging ? "shadow-2xl rotate-1 scale-[1.02]" : ""
+                          } ${isOwner ? "cursor-grab active:cursor-grabbing" : ""}`}
+                        >
+                          <BlogCard post={post} portfolioUsername={params.portfolioUsername} />
 
-                  {isOwner && (
-                    <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleTogglePublish(post)}
-                        className="w-7 h-7 rounded-lg bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                        title={post.published ? "Set to draft" : "Publish"}
-                      >
-                        {post.published ? <FiEyeOff size={12} /> : <FiEye size={12} />}
-                      </button>
-                      <button
-                        onClick={() => openEdit(post)}
-                        className="w-7 h-7 rounded-lg bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                        title="Edit post"
-                      >
-                        <FiEdit3 size={12} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(post)}
-                        className="w-7 h-7 rounded-lg bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
-                        title="Delete post"
-                      >
-                        <FiTrash2 size={12} />
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                          {isOwner && (
+                            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                              <button
+                                onClick={(e) => { e.preventDefault(); handleTogglePublish(post) }}
+                                className="w-7 h-7 rounded-lg bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                                title={post.published ? "Set to draft" : "Publish"}
+                              >
+                                {post.published ? <FiEyeOff size={12} /> : <FiEye size={12} />}
+                              </button>
+                              <button
+                                onClick={(e) => { e.preventDefault(); openEdit(post) }}
+                                className="w-7 h-7 rounded-lg bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                                title="Edit post"
+                              >
+                                <FiEdit3 size={12} />
+                              </button>
+                              <button
+                                onClick={(e) => { e.preventDefault(); handleDelete(post) }}
+                                className="w-7 h-7 rounded-lg bg-background/90 backdrop-blur-sm border border-border flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-colors"
+                                title="Delete post"
+                              >
+                                <FiTrash2 size={12} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
       </div>
 
-      {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!isSaving) setDialogOpen(open) }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -319,7 +362,11 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
                   onClick={() => setForm((f) => ({ ...f, published: !f.published }))}
                   className={`w-9 h-5 rounded-full transition-colors relative ${form.published ? "bg-green-500" : "bg-muted"}`}
                 >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.published ? "translate-x-4" : "translate-x-0.5"}`} />
+                  <div
+                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                      form.published ? "translate-x-4" : "translate-x-0.5"
+                    }`}
+                  />
                 </div>
                 <span className="text-sm">{form.published ? "Published" : "Draft"}</span>
               </label>

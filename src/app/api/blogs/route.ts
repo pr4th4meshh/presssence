@@ -40,7 +40,7 @@ export async function GET(req: Request) {
         portfolioId: portfolio.id,
         ...(isOwner ? {} : { published: true }),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
     })
 
     return NextResponse.json(posts, { status: 200 })
@@ -75,14 +75,12 @@ export async function POST(req: Request) {
 
     let slug = generateSlug(title)
 
-    // Ensure slug uniqueness within portfolio
     const existing = await prisma.blogPost.findUnique({
       where: { portfolioId_slug: { portfolioId: portfolio.id, slug } },
     })
-    if (existing) {
-      slug = `${slug}-${Date.now()}`
-    }
+    if (existing) slug = `${slug}-${Date.now()}`
 
+    const postCount = await prisma.blogPost.count({ where: { portfolioId: portfolio.id } })
     const excerpt = content.slice(0, 160).trimEnd()
 
     const post = await prisma.blogPost.create({
@@ -93,6 +91,7 @@ export async function POST(req: Request) {
         excerpt,
         coverImage: coverImage || null,
         published: published ?? false,
+        order: postCount,
         portfolioId: portfolio.id,
       },
     })

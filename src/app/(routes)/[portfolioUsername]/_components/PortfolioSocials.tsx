@@ -1,8 +1,11 @@
+"use client"
+
 import React, { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FaExternalLinkAlt } from "react-icons/fa"
-import EditButton from "./EditButton"
+import { FiPlus } from "react-icons/fi"
+import { toast } from "sonner"
 import SocialMediaInput from "./portfolioSocials/SocialMediaInput"
 import SocialMediaCard from "./portfolioSocials/SocialMediaCard"
 import { socialIcons } from "./portfolioSocials/SocialMediaIcons"
@@ -42,7 +45,7 @@ interface SocialMetadata {
   spotifyUserId?: string
   github?: SocialProfile
   spotifyData?: SocialProfile
-  [key: string]: any // for any future platforms
+  [key: string]: any
 }
 
 interface PortfolioSocialsProps {
@@ -57,66 +60,46 @@ interface PortfolioSocialsProps {
 const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
   socialMediaLinksViaPortfolio,
 }) => {
-  const [isEditing, setIsEditing] = useState<boolean>(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [socialMediaDataViaExternalApi, setSocialMediaDataViaExternalApi] =
     useState<SocialMetadata[]>([])
-  const [socialMediaData, setSocialMediaData] = useState<SocialMediaData>(
-    () => {
-      const rawLinks = socialMediaLinksViaPortfolio?.socialMedia || {}
-
-      const links: SocialLinks = {}
-      for (const [platform, url] of Object.entries(rawLinks)) {
-        if (
-          typeof url === "string" &&
-          url.trim() &&
-          !/^https?:\/\/localhost(:\d+)?/i.test(url)
-        ) {
-          links[platform] = url.trim()
-        }
+  const [socialMediaData, setSocialMediaData] = useState<SocialMediaData>(() => {
+    const rawLinks = socialMediaLinksViaPortfolio?.socialMedia || {}
+    const links: SocialLinks = {}
+    for (const [platform, url] of Object.entries(rawLinks)) {
+      if (
+        typeof url === "string" &&
+        url.trim() &&
+        !/^https?:\/\/localhost(:\d+)?/i.test(url)
+      ) {
+        links[platform] = url.trim()
       }
-
-      const orderArray = (
-        rawLinks.order && Array.isArray(rawLinks.order) ? rawLinks.order : []
-      ) as string[]
-
-      const order =
-        orderArray.filter((platform: string) => links[platform]) ||
-        Object.keys(links)
-
-      return { links, order }
     }
-  )
+    const orderArray = (
+      rawLinks.order && Array.isArray(rawLinks.order) ? rawLinks.order : []
+    ) as string[]
+    const order = orderArray.filter((p: string) => links[p]) || Object.keys(links)
+    return { links, order }
+  })
 
   const { data: session } = useSession()
   const params = useParams()
   const isOwner = session?.user?.id === socialMediaLinksViaPortfolio?.userId
 
-  const fetchSocialMetadata = async (
-    platform: string,
-    username: string,
-    spotifyUserId: string
-  ) => {
+  const fetchSocialMetadata = async (platform: string, username: string, spotifyUserId: string) => {
     try {
       const res = await fetch(
-        `/api/socialMediaInfo?platform=${encodeURIComponent(
-          platform
-        )}&username=${encodeURIComponent(
-          username || ""
-        )}&spotifyUserId=${encodeURIComponent(spotifyUserId || "")}`
+        `/api/socialMediaInfo?platform=${encodeURIComponent(platform)}&username=${encodeURIComponent(username || "")}&spotifyUserId=${encodeURIComponent(spotifyUserId || "")}`
       )
       if (res.ok) {
-        const metadata: Omit<SocialMediaData, "platform"> = await res.json()
-
+        const metadata = await res.json()
         setSocialMediaDataViaExternalApi((prev) => {
-          const exists = prev.some(
-            (item) => item.platform === platform && item.username === username
-          )
+          const exists = prev.some((item) => item.platform === platform && item.username === username)
           return exists ? prev : [...prev, { platform, username, ...metadata }]
         })
       }
-    } catch (error) {
-      console.error("Error fetching external social media metadata:", error)
-    }
+    } catch {}
   }
 
   useEffect(() => {
@@ -126,26 +109,18 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
           const username = getUsernameFromUrl(platform, url)
           const spotifyUserId = getSpotifyUserIdFromUrl(url)
           if (username || spotifyUserId) {
-            fetchSocialMetadata(
-              platform,
-              username as string,
-              spotifyUserId as string
-            )
+            fetchSocialMetadata(platform, username as string, spotifyUserId as string)
           }
         }
       }
     }
   }, [socialMediaData.links])
 
-  const handleInputChange = (platform: string, value: string): void => {
+  const handleInputChange = (platform: string, value: string) => {
     setSocialMediaData((prev) => ({
       ...prev,
-      links: {
-        ...prev.links,
-        [platform]: value,
-      },
+      links: { ...prev.links, [platform]: value },
     }))
-
     const username = getUsernameFromUrl(platform, value)
     const spotifyUserId = getSpotifyUserIdFromUrl(value)
     if (username || spotifyUserId) {
@@ -153,83 +128,51 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-
-    const filteredOrder = socialMediaData.order.filter((platform: string) =>
-      socialMediaData.links[platform]?.trim()
-    )
-
-    const rawLinks = socialMediaData.links as Record<string, string>
+  const handleSave = async () => {
+    setIsSaving(true)
+    const filteredOrder = socialMediaData.order.filter((p) => socialMediaData.links[p]?.trim())
     const filteredLinks: Record<string, string> = {}
-    for (const [platform, url] of Object.entries(rawLinks)) {
-      if (typeof url === "string" && url.trim()) {
-        filteredLinks[platform] = url.trim()
-      }
+    for (const [platform, url] of Object.entries(socialMediaData.links)) {
+      if (typeof url === "string" && url.trim()) filteredLinks[platform] = url.trim()
     }
-
     try {
-      const response = await fetch(
-        `/api/portfolio?portfolioUsername=${params.portfolioUsername}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            socialLinks: filteredLinks,
-            socialLinksOrder: filteredOrder,
-          }),
-        }
-      )
-
-      if (response.ok) {
+      const res = await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ socialLinks: filteredLinks, socialLinksOrder: filteredOrder }),
+      })
+      if (res.ok) {
         setIsEditing(false)
+        toast.success("Social links updated")
       } else {
-        const data = await response.json()
-        alert(data.message || "Failed to update social media links")
+        const data = await res.json()
+        toast.error(data.message || "Failed to update social links")
       }
-    } catch (error) {
-      console.error("Error updating social media links:", error)
-      alert("An error occurred while updating the social media links")
+    } catch {
+      toast.error("An error occurred while updating social links")
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return
-
     const items = [...socialMediaArray]
     const [reorderedItem] = items.splice(result.source.index, 1)
     items.splice(result.destination.index, 0, reorderedItem)
-
     const newOrder = items.map((item) => item.platform)
-    setSocialMediaData((prev) => ({
-      links: prev.links,
-      order: newOrder,
-    }))
-
+    setSocialMediaData((prev) => ({ links: prev.links, order: newOrder }))
     if (isOwner) {
       try {
-        await fetch(
-          `/api/portfolio?portfolioUsername=${params.portfolioUsername}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              socialLinks: socialMediaData.links,
-              socialLinksOrder: newOrder,
-            }),
-          }
-        )
-      } catch (error) {
-        console.error("Error saving new order:", error)
-      }
+        await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ socialLinks: socialMediaData.links, socialLinksOrder: newOrder }),
+        })
+      } catch {}
     }
   }
 
-  // Create ordered array of social media items
   const socialMediaArray: { platform: string; url: string; id: string }[] = (
     socialMediaData.order.length > 0
       ? socialMediaData.order
@@ -242,117 +185,130 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
       id: `social-${platform}`,
     }))
 
-  if (!isEditing && socialMediaArray.length === 0) {
-    return null
-  }
+  if (!isOwner && socialMediaArray.length === 0) return null
 
   return (
-    <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
-      <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400 mb-6">
-        Connect
-      </h2>
+    <div className="section-border py-10 border-t border-border">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="section-label text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Connect
+        </h2>
 
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {Object.keys(socialMediaData.links).map((platform) => (
-            <SocialMediaInput
-              key={platform}
-              platform={platform}
-              value={socialMediaData.links[platform] || ""}
-              handleInputChange={handleInputChange}
-            />
-          ))}
-          <div className="flex justify-end space-x-4 mt-4">
-            <Button
-              variant="destructive"
-              onClick={() => setIsEditing(false)}
-              className="bg-red-500 text-white"
-            >
-              Cancel
-            </Button>
-            <Button variant="secondary" type="submit">
-              Save Changes
-            </Button>
-          </div>
-        </form>
-      ) : socialMediaArray.length > 0 ? (
-        <div>
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="socials" direction="horizontal">
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4"
+        {isOwner && (
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  disabled={isSaving}
+                  className="h-7 px-3 text-xs text-muted-foreground hover:text-foreground"
                 >
-                  {socialMediaArray.map(
-                    (
-                      {
-                        platform,
-                        url,
-                        id,
-                      }: { platform: string; url: string; id: string },
-                      index: number
-                    ) => {
-                      const Icon =
-                        socialIcons[platform as keyof typeof socialIcons] ||
-                        FaExternalLinkAlt
-
-                      const metadata = socialMediaDataViaExternalApi.find(
-                        (item) => item.platform === platform
-                      )
-                      return (
-                        <Draggable
-                          key={id}
-                          draggableId={id}
-                          index={index}
-                          isDragDisabled={!isOwner}
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                            >
-                              <SocialMediaCard
-                                platform={platform}
-                                url={url}
-                                icon={Icon}
-                                metadata={{
-                                  platform,
-                                  username: metadata?.username,  
-                                  ...metadata                     
-                                }}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      )
-                    }
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          {isOwner && (
-            <EditButton
-              className="float-right mt-4 sm:mt-0"
-              onClick={() => setIsEditing(true)}
-            />
-          )}
-        </div>
-      ) : (
-        // Fallback if no socials exist
-        isOwner && (
-          <div className="text-center">
-            <p className="text-gray-500">
-              Start by adding socials to your portfolio. <br /> (Only visible to
-              you.)
-            </p>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="h-7 px-3 text-xs"
+                >
+                  {isSaving ? "Saving…" : "Save"}
+                </Button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Edit links
+              </button>
+            )}
           </div>
-        )
+        )}
+      </div>
+
+      {/* Edit form */}
+      {isEditing && (
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Object.keys(socialMediaData.links).map((platform) => {
+            const Icon = socialIcons[platform as keyof typeof socialIcons]
+            return (
+              <div key={platform} className="flex items-center gap-2.5 p-3 rounded-xl border border-border bg-muted/30">
+                {Icon && <Icon className="shrink-0 text-base text-muted-foreground" />}
+                <input
+                  type="url"
+                  value={socialMediaData.links[platform] || ""}
+                  onChange={(e) => handleInputChange(platform, e.target.value)}
+                  placeholder={`${platform} URL`}
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none min-w-0"
+                />
+              </div>
+            )
+          })}
+        </div>
       )}
+
+      {/* Cards */}
+      {socialMediaArray.length > 0 ? (
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="socials" direction="horizontal">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              >
+                {socialMediaArray.map(({ platform, url, id }, index) => {
+                  const Icon = socialIcons[platform as keyof typeof socialIcons] || FaExternalLinkAlt
+                  const metadata = socialMediaDataViaExternalApi.find((item) => item.platform === platform)
+                  return (
+                    <Draggable
+                      key={id}
+                      draggableId={id}
+                      index={index}
+                      isDragDisabled={!isOwner}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`transition-shadow ${snapshot.isDragging ? "shadow-xl rotate-1 scale-[1.02]" : ""} ${isOwner ? "cursor-grab active:cursor-grabbing" : ""}`}
+                        >
+                          <SocialMediaCard
+                            platform={platform}
+                            url={url}
+                            icon={Icon}
+                            metadata={{ platform, username: metadata?.username, ...metadata }}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      ) : isOwner ? (
+        <div className="flex flex-col items-center justify-center py-10 gap-3">
+          <p className="text-sm text-muted-foreground text-center">
+            No social links yet. Add some so visitors can find you.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            className="gap-1.5 text-xs h-7"
+          >
+            <FiPlus size={12} />
+            Add links
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

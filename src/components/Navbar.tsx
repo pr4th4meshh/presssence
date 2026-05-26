@@ -1,10 +1,9 @@
 "use client"
 import React, { useState, useEffect } from "react"
-import ThemeSwitch from "./ui/ThemeSwitch"
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { FiLogOut, FiUser } from "react-icons/fi"
+import { FiUser } from "react-icons/fi"
 import { Button } from "./ui/button"
 
 const Navbar = () => {
@@ -18,10 +17,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/" })
-  }
-
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -30,39 +25,41 @@ const Navbar = () => {
     >
       <div className="flex items-center justify-center">
         <div
-          className={`flex items-center gap-4 sm:gap-6 border border-white/20 dark:border-neutral-700/60 px-5 sm:px-7 py-3 rounded-full transition-all duration-300 ${
+          className={`flex items-center gap-4 sm:gap-6 px-5 sm:px-7 py-3 rounded-full transition-all duration-500 ${
             scrolled
-              ? "bg-white/90 dark:bg-black/90 backdrop-blur-lg shadow-lg dark:shadow-black/40"
-              : "bg-white/10 backdrop-blur-sm"
+              ? "bg-white/60 border border-white/80 backdrop-blur-xl shadow-lg shadow-black/[0.06] ring-1 ring-black/[0.04]"
+              : "bg-white/30 border border-white/50 backdrop-blur-md shadow-sm shadow-black/[0.03]"
           }`}
         >
-          <Link href="/" className="text-white dark:text-white text-base font-bold tracking-tight">
+          <Link
+            href="/"
+            className="text-base font-bold tracking-tight text-neutral-900"
+          >
             Presssence
           </Link>
 
-          <div className="w-px h-4 bg-white/20 dark:bg-neutral-600" />
-
-          {/* <ThemeSwitch /> */}
+          <div className="w-px h-4 bg-black/10" />
 
           {status === "loading" ? (
-            <div className="w-16 h-7 rounded-full dark:bg-neutral-800 bg-white/20 animate-pulse" />
+            <div className="w-16 h-7 rounded-full bg-neutral-200 animate-pulse" />
           ) : session?.user ? (
             <div className="flex items-center gap-3">
-              <span className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-white/90 dark:text-gray-200">
+              <span className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-neutral-500">
                 <FiUser className="text-xs opacity-70" />
                 {session.user.name?.split(" ")[0]}
               </span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 text-xs font-medium text-white/80 dark:text-gray-300 hover:text-white dark:hover:text-white transition-colors"
+              <Button
+                variant="destructive"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="rounded-full h-7 px-3 text-xs"
               >
-                <Button variant="destructive" className="rounded-full">Logout</Button>
-              </button>
+                Logout
+              </Button>
             </div>
           ) : (
             <button
               onClick={() => router.push("/auth/signup")}
-              className="text-sm font-medium text-white/90 dark:text-gray-200 hover:text-white transition-colors"
+              className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
             >
               Sign in
             </button>
