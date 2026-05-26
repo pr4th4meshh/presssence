@@ -512,7 +512,7 @@ const FloatingAddButton = ({
             {useIsOwner().isOwner && (
               <LogoutButton
                 iconOnly
-                className="w-12 h-12 rounded-xl bg-muted text-red-500"
+                className="w-12 h-12 rounded-xl"
               />
             )}
           </div>

@@ -3,17 +3,20 @@ import { signOut } from "next-auth/react"
 import React from "react"
 import PrimaryButton from "./ui/primary-button"
 import { LogOut } from "lucide-react"
+import { Button } from "./ui/button"
 
 const LogoutButton = ({ className, iconOnly }: { className?: string, iconOnly?: boolean }) => {
   const handleLogout = () => {
     signOut({ callbackUrl: "/" })
   }
   return (
-    <PrimaryButton
+    <Button
       className={`font-medium z-10 ${className}`}
-      title={iconOnly ? <LogOut /> : "Logout"}
+      variant="destructive"
       onClick={handleLogout}
-    />
+    >
+      {iconOnly ? <LogOut /> : "Logout"}
+    </Button>
   )
 }
 
