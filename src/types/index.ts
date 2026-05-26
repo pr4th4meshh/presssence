@@ -14,6 +14,19 @@ interface SocialMediaLinks {
   [key: string]: string
 }
 
+export interface BlogPost {
+  id: string
+  title: string
+  slug: string
+  content: string
+  excerpt?: string
+  coverImage?: string
+  published: boolean
+  createdAt: string
+  updatedAt: string
+  portfolioId: string
+}
+
 export interface ProfileData {
   id: string
   userId: string
@@ -49,6 +62,7 @@ export interface ProfileData {
     engagement: number
   }
   blogEnabled: boolean
+  blogPosts: BlogPost[]
   collaborators: string[]
   createdAt: string
   updatedAt: string

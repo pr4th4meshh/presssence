@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       projects,
       username,
       socialLinks,
+      blogEnabled,
     } = await req.json()
 
     const session = await getServerSession(authOptions)
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
         profession,
         headline,
         theme: theme || "modern",
+        blogEnabled: blogEnabled ?? false,
         features,
         userId: session?.user.id,
         socialMedia: {
@@ -119,6 +121,11 @@ export async function GET(req: Request) {
         projects: {
           orderBy: {
             position: "asc",
+          },
+        },
+        blogPosts: {
+          orderBy: {
+            createdAt: "desc",
           },
         },
         socialMedia: {
@@ -194,6 +201,7 @@ export async function PUT(req: Request) {
           headline: updateData.headline,
           features: updateData.features,
           theme: updateData.theme,
+          ...(updateData.blogEnabled !== undefined && { blogEnabled: updateData.blogEnabled }),
         },
       })
 
