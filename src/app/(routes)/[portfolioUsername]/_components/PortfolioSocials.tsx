@@ -87,6 +87,24 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
   const params = useParams()
   const isOwner = session?.user?.id === socialMediaLinksViaPortfolio?.userId
 
+  // Re-sync local state when parent refetches (e.g. after adding via FloatingAddButton)
+  useEffect(() => {
+    if (isEditing) return
+    const rawLinks = socialMediaLinksViaPortfolio?.socialMedia || {}
+    const links: SocialLinks = {}
+    for (const [platform, url] of Object.entries(rawLinks)) {
+      if (typeof url === "string" && url.trim() && !/^https?:\/\/localhost(:\d+)?/i.test(url)) {
+        links[platform] = url.trim()
+      }
+    }
+    const orderArray = (rawLinks.order && Array.isArray(rawLinks.order) ? rawLinks.order : []) as string[]
+    const order = orderArray.filter((p: string) => links[p]).length
+      ? orderArray.filter((p: string) => links[p])
+      : Object.keys(links)
+    setSocialMediaData({ links, order })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(socialMediaLinksViaPortfolio?.socialMedia)])
+
   const fetchSocialMetadata = async (platform: string, username: string, spotifyUserId: string) => {
     try {
       const res = await fetch(

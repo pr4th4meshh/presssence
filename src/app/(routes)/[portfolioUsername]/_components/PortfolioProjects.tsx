@@ -259,6 +259,11 @@ const PortfolioProjects = ({
 
   const isOwner = session?.user?.id === initialProjects.userId
 
+  useEffect(() => {
+    setProjects(initialProjects.projects)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(initialProjects.projects)])
+
   const handleUpdateProject = async (
     index: number,
     updatedProject: IProject

@@ -375,7 +375,7 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
                 <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
+                <Button variant="default" onClick={handleSave} disabled={isSaving}>
                   {isSaving ? "Saving..." : editingPost ? "Save Changes" : "Create Post"}
                 </Button>
               </div>

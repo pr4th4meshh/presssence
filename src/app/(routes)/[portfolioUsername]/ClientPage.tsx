@@ -180,7 +180,7 @@ export default function ClientPage() {
                   ? {
                       ...prev,
                       [type === "social"
-                        ? "socialLinks"
+                        ? "socialMedia"
                         : type === "feature"
                         ? "features"
                         : "projects"]: newData,

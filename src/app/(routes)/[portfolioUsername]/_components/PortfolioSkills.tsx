@@ -163,6 +163,11 @@ const PortfolioSkills = ({
   )
   const params = useParams()
 
+  useEffect(() => {
+    setSkills(skillsAndFeatures?.features || [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(skillsAndFeatures?.features)])
+
   const handleRemoveSkill = async (indexToRemove: number) => {
     const updatedSkills = skills.filter((_, index) => index !== indexToRemove)
     setSkills(updatedSkills)
