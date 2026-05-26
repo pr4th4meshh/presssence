@@ -8,6 +8,7 @@ import PrimaryButton from "@/components/ui/primary-button"
 import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
 import { ProfileData } from "@/types"
+import { getInitials } from "@/utils/getInitials"
 
 interface IUser {
   image: string
@@ -302,11 +303,15 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
     }
   }
 
-  const ImageLoadingSkeleton = () => {
-    return (
-      <div className="w-[250px] sm:w-[300px] h-[250px] sm:h-[300px] bg-gray-400 rounded-full animate-pulse" />
-    )
-  }
+
+
+  const InitialsAvatar = () => (
+    <div className="w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] rounded-full border border-border bg-muted flex items-center justify-center shadow-sm">
+      <span className="text-5xl sm:text-6xl font-bold text-muted-foreground select-none">
+        {getInitials(fullName || "?")}
+      </span>
+    </div>
+  )
 
   return (
     <div className="py-16 md:py-24">
@@ -314,17 +319,17 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
         {/* Profile Image */}
         <div className="flex flex-col items-center gap-4 flex-shrink-0">
           <div className="relative group">
-            {!userData?.image ? (
-              <ImageLoadingSkeleton />
-            ) : (
+            {userData?.image ? (
               <Image
-                src={userData?.image || '/qp_default_avatar0.jpg'}
+                src={userData.image}
                 alt={`${fullName}'s Profile Picture`}
                 width={400}
                 height={400}
-                className="rounded-2xl object-cover w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] shadow-2xl dark:shadow-black/60 border dark:border-neutral-700 border-gray-200"
+                className="rounded-2xl object-cover w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] shadow-sm border border-border"
                 priority
               />
+            ) : (
+              <InitialsAvatar />
             )}
             {isOwner && (
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-2xl transition-all duration-300 flex items-center justify-center">
