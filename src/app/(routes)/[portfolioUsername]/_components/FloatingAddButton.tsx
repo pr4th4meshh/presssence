@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { Users, Star, Briefcase, Check, X, Palette } from "lucide-react"
+import { AtSign, Zap, FolderOpen, Check, X, Palette } from "lucide-react"
 import { storage } from "@/lib/firebase"
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
 import Image from "next/image"
@@ -216,19 +216,19 @@ const FloatingAddButton = ({
   const dockItems = [
     {
       type: "social" as AddItemType,
-      icon: Users,
+      icon: AtSign,
       label: "Social",
       tooltip: "Add Social Media",
     },
     {
       type: "feature" as AddItemType,
-      icon: Star,
+      icon: Zap,
       label: "Skills",
-      tooltip: "Add Skills/Features",
+      tooltip: "Add Skill",
     },
     {
       type: "project" as AddItemType,
-      icon: Briefcase,
+      icon: FolderOpen,
       label: "Project",
       tooltip: "Add Project",
     },
