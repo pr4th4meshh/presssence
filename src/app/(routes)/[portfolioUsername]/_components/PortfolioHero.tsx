@@ -9,9 +9,6 @@ import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
 import { ProfileData } from "@/types"
 import { getInitials } from "@/utils/getInitials"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 interface IUser {
   image: string
@@ -336,19 +333,19 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
             )}
             {isOwner && (
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-full transition-all duration-300 flex items-center justify-center">
-                <Label className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <Input
+                <label className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <input
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
                     className="hidden"
                     disabled={isUploading}
                   />
-                  <Button variant="default" >
+                  <div className="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-3 py-2 rounded-lg shadow-lg text-xs font-medium flex items-center gap-1.5">
                     <FiEdit3 size={12} />
                     Change photo
-                  </Button>
-                </Label>
+                  </div>
+                </label>
               </div>
             )}
           </div>
