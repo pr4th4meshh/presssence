@@ -94,6 +94,7 @@ const FloatingAddButton = ({
     coverImage: "",
   })
   const [imageUploadProgress, setImageUploadProgress] = useState(0)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const params = useParams()
 
@@ -168,6 +169,7 @@ const FloatingAddButton = ({
           timeline: "",
           coverImage: "",
         })
+        setImagePreviewUrl(null)
         toast.success(`New ${addType} added successfully.`)
         refetchData()
       } else throw new Error("Failed to update")
@@ -184,12 +186,18 @@ const FloatingAddButton = ({
   ) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const blobUrl = URL.createObjectURL(file)
+    setImagePreviewUrl(blobUrl)
     setImageUploadProgress(1)
     try {
       const downloadURL = await uploadToCloudinary(file, "presssence/projects")
       setNewProject((p) => ({ ...p, coverImage: downloadURL }))
+      URL.revokeObjectURL(blobUrl)
+      setImagePreviewUrl(null)
     } catch {
       toast.error("Failed to upload image")
+      URL.revokeObjectURL(blobUrl)
+      setImagePreviewUrl(null)
     } finally {
       setImageUploadProgress(0)
     }
@@ -381,27 +389,30 @@ const FloatingAddButton = ({
                       accept="image/*"
                       onChange={handleCoverImageUpload}
                     />
-                    {imageUploadProgress > 0 && imageUploadProgress < 100 && (
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${imageUploadProgress}%` }}
-                        className="absolute bottom-0 left-0 h-1 bg-foreground rounded-full"
-                      />
-                    )}
                   </div>
-                  {newProject.coverImage && (
+                  {(imagePreviewUrl || newProject.coverImage) && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="mt-3"
+                      className="mt-3 relative w-24 h-24"
                     >
                       <Image
-                        src={newProject.coverImage}
+                        src={imagePreviewUrl || newProject.coverImage!}
                         alt="Cover preview"
                         className="w-24 h-24 object-cover rounded-lg border"
                         height={96}
                         width={96}
+                        unoptimized={!!imagePreviewUrl}
                       />
+                      {imageUploadProgress > 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                          />
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </div>
@@ -421,7 +432,7 @@ const FloatingAddButton = ({
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={isLoading}
+                disabled={isLoading || imageUploadProgress > 0}
               >
                 {isLoading ? (
                   <motion.div
