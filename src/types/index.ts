@@ -14,6 +14,20 @@ interface SocialMediaLinks {
   [key: string]: string
 }
 
+export interface WorkExperience {
+  id: string
+  company: string
+  role: string
+  startDate: string
+  endDate?: string
+  description?: string
+  location?: string
+  position: number
+  portfolioId: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface BlogPost {
   id: string
   title: string
@@ -64,6 +78,7 @@ export interface ProfileData {
   }
   blogEnabled: boolean
   blogPosts: BlogPost[]
+  workExperiences: WorkExperience[]
   collaborators: string[]
   createdAt: string
   updatedAt: string

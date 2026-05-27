@@ -84,6 +84,7 @@ export default async function Page({ params }: PageProps) {
       where: { username: portfolioUsername },
       include: {
         projects: { orderBy: { position: "asc" } },
+        workExperiences: { orderBy: { position: "asc" } },
         blogPosts: true,
         socialMedia: {
           select: {

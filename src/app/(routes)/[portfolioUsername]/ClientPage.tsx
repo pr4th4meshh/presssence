@@ -11,6 +11,7 @@ import PortfolioSkills from "./_components/PortfolioSkills"
 import PortfolioProjects from "./_components/PortfolioProjects"
 import PortfolioSocials from "./_components/PortfolioSocials"
 import PortfolioBlogs from "./_components/PortfolioBlogs"
+import PortfolioWorkExperience from "./_components/PortfolioWorkExperience"
 import CTAComponent from "./_components/CTAComponent"
 import FloatingAddButton from "./_components/FloatingAddButton"
 import { ProfileData } from "@/types"
@@ -79,6 +80,13 @@ export default function ClientPage({ initialData }: { initialData: ProfileData }
 
           <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.3}>
             <PortfolioProjects initialProjects={profileData} />
+          </motion.div>
+
+          <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.35}>
+            <PortfolioWorkExperience
+              initialExperiences={profileData.workExperiences ?? []}
+              userId={profileData.userId}
+            />
           </motion.div>
 
           <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.4}>

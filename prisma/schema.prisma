@@ -66,8 +66,9 @@ model Portfolio {
   blogPostOrder String[]     @default([])
   socialMedia SocialLinks?
   features    String[]
-  projects    Project[]
-  blogPosts   BlogPost[]
+  projects        Project[]
+  blogPosts       BlogPost[]
+  workExperiences WorkExperience[]
   userId      String       @unique @db.ObjectId
   User        User         @relation(fields: [userId], references: [id])
   createdAt   DateTime     @default(now())
@@ -119,6 +120,21 @@ model Project {
   link        String?
   timeline    String?
   coverImage  String?
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  portfolioId String    @db.ObjectId
+  Portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model WorkExperience {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  company     String
+  role        String
+  startDate   String
+  endDate     String?
+  description String?
+  location    String?
   position    Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
