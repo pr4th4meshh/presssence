@@ -1,5 +1,8 @@
-import ClientPage from "./ClientPage"
+import { prisma } from "@/lib/prisma"
 import { Metadata } from "next"
+import ClientPage from "./ClientPage"
+import NoPortfolioScreen from "./_components/NoPortfolioScreen"
+import { ProfileData } from "@/types"
 
 interface PageProps {
   params: Promise<{
@@ -73,4 +76,45 @@ export async function generateMetadata(
   }
 }
 
-export default ClientPage
+export default async function Page({ params }: PageProps) {
+  const { portfolioUsername } = await params
+
+  const portfolio = await prisma.portfolio.findFirst({
+    where: { username: portfolioUsername },
+    include: {
+      projects: { orderBy: { position: "asc" } },
+      blogPosts: true,
+      socialMedia: {
+        select: {
+          twitter: true,
+          linkedin: true,
+          github: true,
+          instagram: true,
+          youtube: true,
+          medium: true,
+          website: true,
+          behance: true,
+          figma: true,
+          awwwards: true,
+          dribbble: true,
+          spotify: true,
+          order: true,
+        },
+      },
+    },
+  })
+
+  if (!portfolio) return <NoPortfolioScreen />
+
+  const blogOrder: string[] = (portfolio as any).blogPostOrder ?? []
+  const sortedBlogPosts = blogOrder.length > 0
+    ? [
+        ...blogOrder.map((id) => portfolio.blogPosts.find((p) => p.id === id)).filter(Boolean),
+        ...portfolio.blogPosts.filter((p) => !blogOrder.includes(p.id)),
+      ]
+    : portfolio.blogPosts
+
+  const profileData = { ...portfolio, blogPosts: sortedBlogPosts } as unknown as ProfileData
+
+  return <ClientPage initialData={profileData} />
+}

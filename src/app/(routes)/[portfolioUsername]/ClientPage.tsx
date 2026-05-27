@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
-import Loading from "@/components/Loading"
 import PageHeader from "./_components/PageHeader"
 import PortfolioHero from "./_components/PortfolioHero"
 import PortfolioFooter from "./_components/PortfolioFooter"
@@ -14,8 +13,9 @@ import PortfolioSocials from "./_components/PortfolioSocials"
 import PortfolioBlogs from "./_components/PortfolioBlogs"
 import CTAComponent from "./_components/CTAComponent"
 import FloatingAddButton from "./_components/FloatingAddButton"
-import NoPortfolioScreen from "./_components/NoPortfolioScreen"
 import { ProfileData } from "@/types"
+
+type AddItemType = "social" | "feature" | "project"
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -26,51 +26,21 @@ const fadeIn = {
   }),
 }
 
-export default function ClientPage() {
+export default function ClientPage({ initialData }: { initialData: ProfileData }) {
   const params = useParams<{ portfolioUsername: string }>()
-  const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [portfolioExists, setPortfolioExists] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
-  const [theme, setTheme] = useState("modern")
+  const router = useRouter()
   const session = useSession()
 
-  const fetchPortfolioData = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch(
-        `/api/portfolio?portfolioUsername=${params.portfolioUsername}`
-      )
+  const [profileData, setProfileData] = useState<ProfileData>(initialData)
+  const [theme, setTheme] = useState(
+    typeof initialData.theme === "string" ? initialData.theme : "modern"
+  )
 
-      if (!response.ok) {
-        setPortfolioExists(false)
-        return
-      }
-
-      const data = await response.json()
-      setProfileData(data || null)
-      setTheme(typeof data?.theme === "string" ? data.theme : "modern")
-      setPortfolioExists(true)
-    } catch {
-      setPortfolioExists(false)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const refetchPortfolioData = async () => {
-    try {
-      const response = await fetch(
-        `/api/portfolio?portfolioUsername=${params.portfolioUsername}`
-      )
-      if (response.ok) {
-        const data = await response.json()
-        setProfileData(data || null)
-        setTheme(typeof data?.theme === "string" ? data.theme : "modern")
-      }
-    } catch {
-      // silently fail
-    }
-  }
+  // Sync when server re-renders after router.refresh()
+  useEffect(() => {
+    setProfileData(initialData)
+    setTheme(typeof initialData.theme === "string" ? initialData.theme : "modern")
+  }, [initialData])
 
   const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme)
@@ -80,25 +50,7 @@ export default function ClientPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ theme: newTheme }),
       })
-    } catch {
-      // silently fail
-    }
-  }
-
-  useEffect(() => {
-    fetchPortfolioData()
-  }, [params.portfolioUsername])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex bg-[#f5f5f5] items-center justify-center">
-        <Loading />
-      </div>
-    )
-  }
-
-  if (!portfolioExists || !profileData) {
-    return <NoPortfolioScreen />
+    } catch {}
   }
 
   const isOwner = session?.data?.user?.id === profileData.userId
@@ -113,48 +65,23 @@ export default function ClientPage() {
         <PageHeader />
 
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 pb-16">
-          <motion.div
-            variants={fadeIn}
-            initial="hidden"
-            animate="visible"
-            custom={0}
-          >
+          <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0}>
             <PortfolioHero profileData={profileData} />
           </motion.div>
 
-          <motion.div
-            variants={fadeIn}
-            initial="hidden"
-            animate="visible"
-            custom={0.1}
-          >
+          <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.1}>
             <PortfolioSkills skillsAndFeatures={profileData} isOwner={isOwner} />
           </motion.div>
 
-          <motion.div
-            variants={fadeIn}
-            initial="hidden"
-            animate="visible"
-            custom={0.2}
-          >
+          <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.2}>
             <PortfolioSocials socialMediaLinksViaPortfolio={profileData} />
           </motion.div>
 
-          <motion.div
-            variants={fadeIn}
-            initial="hidden"
-            animate="visible"
-            custom={0.3}
-          >
+          <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.3}>
             <PortfolioProjects initialProjects={profileData} />
           </motion.div>
 
-          <motion.div
-            variants={fadeIn}
-            initial="hidden"
-            animate="visible"
-            custom={0.4}
-          >
+          <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0.4}>
             <PortfolioBlogs
               initialPosts={profileData.blogPosts ?? []}
               initialBlogEnabled={profileData.blogEnabled ?? false}
@@ -170,23 +97,15 @@ export default function ClientPage() {
             userId={profileData.userId}
             socialMediaLinks={profileData.socialMedia}
             features={profileData.features}
-            refetchData={refetchPortfolioData}
+            refetchData={() => router.refresh()}
             projects={profileData.projects}
             currentTheme={theme}
             onThemeChange={handleThemeChange}
-            onUpdate={(type, newData) => {
-              setProfileData((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      [type === "social"
-                        ? "socialMedia"
-                        : type === "feature"
-                        ? "features"
-                        : "projects"]: newData,
-                    }
-                  : null
-              )
+            onUpdate={(type: AddItemType, newData: any) => {
+              setProfileData((prev) => ({
+                ...prev,
+                [type === "social" ? "socialMedia" : type === "feature" ? "features" : "projects"]: newData,
+              }))
             }}
           />
         )}
