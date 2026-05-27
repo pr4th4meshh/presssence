@@ -79,42 +79,51 @@ export async function generateMetadata(
 export default async function Page({ params }: PageProps) {
   const { portfolioUsername } = await params
 
-  const portfolio = await prisma.portfolio.findFirst({
-    where: { username: portfolioUsername },
-    include: {
-      projects: { orderBy: { position: "asc" } },
-      blogPosts: true,
-      socialMedia: {
-        select: {
-          twitter: true,
-          linkedin: true,
-          github: true,
-          instagram: true,
-          youtube: true,
-          medium: true,
-          website: true,
-          behance: true,
-          figma: true,
-          awwwards: true,
-          dribbble: true,
-          spotify: true,
-          order: true,
+  try {
+    const portfolio = await prisma.portfolio.findFirst({
+      where: { username: portfolioUsername },
+      include: {
+        projects: { orderBy: { position: "asc" } },
+        blogPosts: true,
+        socialMedia: {
+          select: {
+            twitter: true,
+            linkedin: true,
+            github: true,
+            instagram: true,
+            youtube: true,
+            medium: true,
+            website: true,
+            behance: true,
+            figma: true,
+            awwwards: true,
+            dribbble: true,
+            spotify: true,
+            order: true,
+          },
         },
       },
-    },
-  })
+    })
 
-  if (!portfolio) return <NoPortfolioScreen />
+    if (!portfolio) return <NoPortfolioScreen />
 
-  const blogOrder: string[] = (portfolio as any).blogPostOrder ?? []
-  const sortedBlogPosts = blogOrder.length > 0
-    ? [
-        ...blogOrder.map((id) => portfolio.blogPosts.find((p) => p.id === id)).filter(Boolean),
-        ...portfolio.blogPosts.filter((p) => !blogOrder.includes(p.id)),
-      ]
-    : portfolio.blogPosts
+    const blogOrder: string[] = (portfolio as any).blogPostOrder ?? []
+    const sortedBlogPosts = blogOrder.length > 0
+      ? [
+          ...blogOrder.map((id) => portfolio.blogPosts.find((p) => p.id === id)).filter(Boolean),
+          ...portfolio.blogPosts.filter((p) => !blogOrder.includes(p.id)),
+        ]
+      : portfolio.blogPosts
 
-  const profileData = { ...portfolio, blogPosts: sortedBlogPosts } as unknown as ProfileData
+    // JSON round-trip converts Prisma Date objects → ISO strings,
+    // matching the shape components expect from the old API fetch flow.
+    const profileData = JSON.parse(
+      JSON.stringify({ ...portfolio, blogPosts: sortedBlogPosts })
+    ) as ProfileData
 
-  return <ClientPage initialData={profileData} />
+    return <ClientPage initialData={profileData} />
+  } catch (error) {
+    console.error("[portfolioUsername] page error:", error)
+    return <NoPortfolioScreen />
+  }
 }

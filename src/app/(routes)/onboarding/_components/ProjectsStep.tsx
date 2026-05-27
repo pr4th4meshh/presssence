@@ -3,8 +3,7 @@
 import { UseFormRegister, FieldErrors, Control, useFieldArray, UseFormWatch } from "react-hook-form"
 import { FormData } from "@/lib/validations"
 import { useState } from "react"
-import { storage } from "@/lib/firebase"
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -39,25 +38,16 @@ export default function ProjectsStep({ register, errors, control, watch }: Proje
   const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    const storageRef = ref(storage, `projects/${Date.now()}_${file.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        setUploadProgress((prev) => ({ ...prev, [index]: progress }))
-      },
-      (error) => console.error("Upload error:", error),
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((url) => {
-          control._formValues.projects[index].coverImage = url
-          setUploadedImages((prev) => ({ ...prev, [index]: url }))
-          setUploadProgress((prev) => ({ ...prev, [index]: 0 }))
-        })
-      }
-    )
+    setUploadProgress((prev) => ({ ...prev, [index]: 1 }))
+    try {
+      const url = await uploadToCloudinary(file, "presssence/projects")
+      control._formValues.projects[index].coverImage = url
+      setUploadedImages((prev) => ({ ...prev, [index]: url }))
+    } catch (error) {
+      console.error("Upload error:", error)
+    } finally {
+      setUploadProgress((prev) => ({ ...prev, [index]: 0 }))
+    }
   }
 
   const handleAdd = () => {

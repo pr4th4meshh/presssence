@@ -13,7 +13,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error(error)
+    console.error("[error boundary]", error)
   }, [error])
 
   return (
@@ -31,10 +31,16 @@ export default function Error({
         <h1 className="text-2xl font-semibold dark:text-white text-gray-900 mb-3">
           Something went wrong
         </h1>
-        <p className="dark:text-gray-400 text-gray-600 mb-8 text-sm leading-relaxed">
+        <p className="dark:text-gray-400 text-gray-600 mb-4 text-sm leading-relaxed">
           An unexpected error occurred. Please try again or go back to the
           homepage.
         </p>
+        {process.env.NODE_ENV === "development" && (
+          <pre className="text-left text-xs bg-gray-100 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl p-4 mb-6 overflow-auto max-h-48 text-red-500 whitespace-pre-wrap break-all">
+            {error.message}
+            {error.stack && `\n\n${error.stack}`}
+          </pre>
+        )}
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={reset}

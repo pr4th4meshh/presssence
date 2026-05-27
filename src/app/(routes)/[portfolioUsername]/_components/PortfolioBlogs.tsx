@@ -23,8 +23,7 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd"
-import { storage } from "@/lib/firebase"
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import BlogCard from "./BlogCard"
 import { BlogPost } from "@/types"
 
@@ -78,21 +77,18 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
     setDialogOpen(true)
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const storageRef = ref(storage, `blogs/${Date.now()}_${file.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
-    uploadTask.on(
-      "state_changed",
-      (snap) => setUploadProgress((snap.bytesTransferred / snap.totalBytes) * 100),
-      (err) => { console.error(err); toast.error("Image upload failed") },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref)
-        setForm((f) => ({ ...f, coverImage: url }))
-        setUploadProgress(0)
-      }
-    )
+    setUploadProgress(1)
+    try {
+      const url = await uploadToCloudinary(file, "presssence/blogs")
+      setForm((f) => ({ ...f, coverImage: url }))
+    } catch {
+      toast.error("Image upload failed")
+    } finally {
+      setUploadProgress(0)
+    }
   }
 
   const handleSave = async () => {

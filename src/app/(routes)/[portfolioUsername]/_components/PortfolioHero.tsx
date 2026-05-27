@@ -2,13 +2,13 @@ import React, { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import { storage } from "@/lib/firebase"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import PrimaryButton from "@/components/ui/primary-button"
 import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
 import { ProfileData } from "@/types"
 import { getInitials } from "@/utils/getInitials"
+import { Trash } from "lucide-react"
 
 interface IUser {
   image: string
@@ -176,6 +176,8 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
   const [headline, setHeadline] = useState(profileData?.headline || "")
   const [theme, setTheme] = useState(profileData?.theme || "modern")
   const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userData, setUserData] = useState<IUser | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -188,6 +190,10 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {
       setFile(selectedFile)
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(URL.createObjectURL(selectedFile))
+      setUploadStatus(null)
+      setUploadError(null)
     }
   }
 
@@ -234,13 +240,8 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
     setIsUploading(true)
     setUploadError(null)
 
-    const storageRef = ref(
-      storage,
-      `profile_images/${session?.user?.id}_${file.name}`
-    )
     try {
-      await uploadBytes(storageRef, file)
-      const downloadURL = await getDownloadURL(storageRef)
+      const downloadURL = await uploadToCloudinary(file, "presssence/profiles")
 
       const response = await fetch("/api/user/update-photo", {
         method: "POST",
@@ -255,6 +256,8 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
         update({ ...session, user: { ...session?.user, image: downloadURL } })
         setUserData(prevData => prevData ? { ...prevData, image: downloadURL } : null)
         setUploadStatus("Profile image updated successfully!")
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
       } else {
         throw new Error(data.message || "Failed to update profile image")
       }
@@ -319,13 +322,23 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
         {/* Profile Image */}
         <div className="flex flex-col items-center gap-4 flex-shrink-0">
           <div className="relative group">
-            {userData?.image ? (
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt="Preview"
+                width={400}
+                height={400}
+                className="rounded-full object-cover w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] shadow-sm border-2 border-blue-400"
+                priority
+                unoptimized
+              />
+            ) : userData?.image ? (
               <Image
                 src={userData.image}
                 alt={`${fullName}'s Profile Picture`}
                 width={400}
                 height={400}
-                className="rounded-2xl object-cover w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] shadow-sm border border-border"
+                className="rounded-full object-cover w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] shadow-sm border border-border"
                 priority
               />
             ) : (
@@ -335,6 +348,7 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-full transition-all duration-300 flex items-center justify-center">
                 <label className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
@@ -352,12 +366,28 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
 
           {file && (
             <div className="w-full max-w-[240px] space-y-2">
-              <PrimaryButton
-                title={isUploading ? "Uploading..." : "Save photo"}
-                onClick={handleUpload}
-                className="w-full text-sm"
-                disabled={isUploading}
-              />
+              <div className="flex gap-2">
+                <PrimaryButton
+                  title={isUploading ? "Uploading..." : "Save photo"}
+                  onClick={handleUpload}
+                  className="flex-1 text-sm"
+                  disabled={isUploading}
+                />
+                <button
+                  onClick={() => {
+                    if (previewUrl) URL.revokeObjectURL(previewUrl)
+                    setPreviewUrl(null)
+                    setFile(null)
+                    setUploadStatus(null)
+                    setUploadError(null)
+                    if (fileInputRef.current) fileInputRef.current.value = ""
+                  }}
+                  disabled={isUploading}
+                  className="px-3 py-1.5 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors disabled:opacity-50"
+                >
+                  <Trash size={14} />
+                </button>
+              </div>
               {isUploading && (
                 <p className="text-blue-500 text-xs text-center">Uploading...</p>
               )}

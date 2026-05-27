@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FiEdit3, FiX, FiTrash2 } from "react-icons/fi"
-import { storage } from "@/lib/firebase"
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage"
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import ProjectCard from "./ProjectCard"
 import PrimaryButton from "@/components/ui/primary-button"
 import { Button } from "@/components/ui/button"
@@ -89,29 +88,17 @@ const EditableProject = ({
 
   const handleUploadImage = async () => {
     if (!selectedFile) return
-
     setUploading(true)
-    const storageRef = ref(storage, `/projects/${selectedFile.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, selectedFile)
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        setUploadProgress(progress)
-      },
-      (error) => {
-        console.error("Upload failed:", error)
-        setUploading(false)
-      },
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-        setEditProject((prev) => ({ ...prev, coverImage: downloadURL }))
-        setUploading(false)
-        setImagePreview(null)
-        setSelectedFile(null)
-      }
-    )
+    try {
+      const downloadURL = await uploadToCloudinary(selectedFile, "presssence/projects")
+      setEditProject((prev) => ({ ...prev, coverImage: downloadURL }))
+      setImagePreview(null)
+      setSelectedFile(null)
+    } catch (error) {
+      console.error("Upload failed:", error)
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

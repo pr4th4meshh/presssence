@@ -1,9 +1,7 @@
 "use client"
 
 import React, { useState } from 'react'
-import { useSession } from 'next-auth/react'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { storage } from '@/lib/firebase'
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +14,6 @@ interface ProfilePhotoUploadProps {
 const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ currentPhotoUrl, onPhotoUpdate }) => {
   const [uploading, setUploading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState(currentPhotoUrl)
-  const { data: session } = useSession()
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -25,10 +22,8 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({ currentPhotoUrl
     setUploading(true)
 
     try {
-      const storageRef = ref(storage, `profile-photos/${session?.user?.id}`)
-      await uploadBytes(storageRef, file)
-      const downloadUrl = await getDownloadURL(storageRef)
-      
+      const downloadUrl = await uploadToCloudinary(file, "presssence/profiles")
+
       setPhotoUrl(downloadUrl)
       onPhotoUpdate(downloadUrl)
 

@@ -5,8 +5,7 @@ import { useState } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { AtSign, Zap, FolderOpen, Check, X, Palette } from "lucide-react"
-import { storage } from "@/lib/firebase"
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage"
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -21,7 +20,6 @@ import {
 import { toast } from "sonner"
 import SharePresssenceButton from "./SharePresssenceButton"
 import LogoutButton from "@/components/LogoutButton"
-import useIsOwner from "@/hooks/useIsOwner"
 
 type AddItemType = "social" | "feature" | "project"
 
@@ -186,31 +184,15 @@ const FloatingAddButton = ({
   ) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const storageRef = ref(storage, `projects/${file.name}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        setImageUploadProgress(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        )
-      },
-      (error) => {
-        console.error("Error uploading image:", error)
-        toast.error("Failed to upload image")
-      },
-      async () => {
-        try {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-          setNewProject((p) => ({ ...p, coverImage: downloadURL }))
-          setImageUploadProgress(0)
-        } catch (err) {
-          console.error("Failed to get download URL:", err)
-          toast.error("Failed to get image URL")
-        }
-      }
-    )
+    setImageUploadProgress(1)
+    try {
+      const downloadURL = await uploadToCloudinary(file, "presssence/projects")
+      setNewProject((p) => ({ ...p, coverImage: downloadURL }))
+    } catch {
+      toast.error("Failed to upload image")
+    } finally {
+      setImageUploadProgress(0)
+    }
   }
 
   const dockItems = [
@@ -509,12 +491,10 @@ const FloatingAddButton = ({
                 </motion.button>
               )
             })}
-            {useIsOwner().isOwner && (
-              <LogoutButton
-                iconOnly
-                className="w-12 h-12 rounded-xl"
-              />
-            )}
+            <LogoutButton
+              iconOnly
+              className="w-12 h-12 rounded-xl"
+            />
           </div>
         </motion.div>
       </div>

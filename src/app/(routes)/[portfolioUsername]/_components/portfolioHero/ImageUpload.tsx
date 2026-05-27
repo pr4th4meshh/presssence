@@ -1,7 +1,6 @@
 import React, { useState } from "react"
 import PrimaryButton from "@/components/ui/primary-button"
-import { storage } from "@/lib/firebase"
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
 
@@ -25,11 +24,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
   const handleUpload = async () => {
     if (!file) return
-
-    const storageRef = ref(storage, `profile_images/${file.name}`)
     try {
-      await uploadBytes(storageRef, file)
-      const downloadURL = await getDownloadURL(storageRef)
+      const downloadURL = await uploadToCloudinary(file, "presssence/profiles")
       onImageUpload(downloadURL)
     } catch (error) {
       console.error("Error uploading image:", error)
