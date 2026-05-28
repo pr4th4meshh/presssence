@@ -69,11 +69,24 @@ model Portfolio {
   projects        Project[]
   blogPosts       BlogPost[]
   workExperiences WorkExperience[]
+  photos          Photo[]
   userId      String       @unique @db.ObjectId
   User        User         @relation(fields: [userId], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   isExisting  Boolean      @default(false)
+}
+
+model Photo {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  url         String
+  w           Int       @default(1)
+  h           Int       @default(1)
+  x           Int       @default(0)
+  y           Int       @default(0)
+  portfolioId String    @db.ObjectId
+  Portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
 }
 
 model BlogPost {

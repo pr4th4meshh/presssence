@@ -85,6 +85,7 @@ export default async function Page({ params }: PageProps) {
       include: {
         projects: { orderBy: { position: "asc" } },
         workExperiences: { orderBy: { position: "asc" } },
+        photos: true,
         blogPosts: true,
         socialMedia: {
           select: {
