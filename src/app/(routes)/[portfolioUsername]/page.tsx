@@ -83,6 +83,7 @@ export default async function Page({ params }: PageProps) {
     const portfolio = await prisma.portfolio.findFirst({
       where: { username: portfolioUsername },
       include: {
+        User: { select: { image: true } },
         projects: { orderBy: { position: "asc" } },
         workExperiences: { orderBy: { position: "asc" } },
         photos: true,
@@ -120,7 +121,11 @@ export default async function Page({ params }: PageProps) {
     // JSON round-trip converts Prisma Date objects → ISO strings,
     // matching the shape components expect from the old API fetch flow.
     const profileData = JSON.parse(
-      JSON.stringify({ ...portfolio, blogPosts: sortedBlogPosts })
+      JSON.stringify({
+        ...portfolio,
+        blogPosts: sortedBlogPosts,
+        photo: portfolio.User?.image ?? "",
+      })
     ) as ProfileData
 
     return <ClientPage initialData={profileData} />

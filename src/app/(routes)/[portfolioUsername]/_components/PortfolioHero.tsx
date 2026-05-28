@@ -4,25 +4,11 @@ import Image from "next/image"
 import { useParams } from "next/navigation"
 import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import PrimaryButton from "@/components/ui/primary-button"
-import { FiEdit3, FiCheck, FiX } from "react-icons/fi"
+import { FiEdit3 } from "react-icons/fi"
 import "react-loading-skeleton/dist/skeleton.css"
 import { ProfileData } from "@/types"
 import { getInitials } from "@/utils/getInitials"
 import { Trash } from "lucide-react"
-
-interface IUser {
-  image: string
-  name: string
-  email: string
-}
-
-interface IProfileData {
-  fullName?: string
-  profession?: string
-  headline?: string
-  theme?: string
-  userId?: string
-}
 
 // Individual Editable Component
 const EditableField = ({
@@ -175,16 +161,19 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
   const [profession, setProfession] = useState(profileData?.profession || "")
   const [headline, setHeadline] = useState(profileData?.headline || "")
   const [theme, setTheme] = useState(profileData?.theme || "modern")
+  const [profileImage, setProfileImage] = useState<string>(profileData?.photo || "")
   const [file, setFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [userData, setUserData] = useState<IUser | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadStatus, setUploadStatus] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
   const isOwner = session?.user?.id === profileData?.userId
+
+  useEffect(() => {
+    setProfileImage(profileData?.photo || "")
+  }, [profileData?.photo])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -197,43 +186,6 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
     }
   }
 
-  const getUserId = async () => {
-    try {
-      const response = await fetch(
-        `/api/portfolio/get-user-id?portfolioUsername=${params.portfolioUsername}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
-      )
-      const data = await response.json()
-      setUserId(data)
-    } catch {
-      // silently fail
-    }
-  }
-
-  const fetchUserDetails = async () => {
-    try {
-      const response = await fetch(`/api/user?username=${userId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      })
-      const data = await response.json()
-      setUserData(data)
-    } catch {
-      // silently fail
-    }
-  }
-
-  useEffect(() => {
-    getUserId()
-  }, [params.portfolioUsername])
-
-  useEffect(() => {
-    fetchUserDetails()
-  }, [userId])
-
   const handleUpload = async () => {
     if (!file) return
 
@@ -245,16 +197,14 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
 
       const response = await fetch("/api/user/update-photo", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ photoUrl: downloadURL }),
       })
 
       const data = await response.json()
       if (response.ok) {
         update({ ...session, user: { ...session?.user, image: downloadURL } })
-        setUserData(prevData => prevData ? { ...prevData, image: downloadURL } : null)
+        setProfileImage(downloadURL)
         setUploadStatus("Profile image updated successfully!")
         if (previewUrl) URL.revokeObjectURL(previewUrl)
         setPreviewUrl(null)
@@ -332,9 +282,9 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
                 priority
                 unoptimized
               />
-            ) : userData?.image ? (
+            ) : profileImage ? (
               <Image
-                src={userData.image}
+                src={profileImage}
                 alt={`${fullName}'s Profile Picture`}
                 width={400}
                 height={400}
