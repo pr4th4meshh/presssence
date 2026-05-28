@@ -154,6 +154,16 @@ const EditableField = ({
 }
 
 
+function InitialsAvatar({ name }: { name: string }) {
+  return (
+    <div className="w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] rounded-full border border-border bg-muted flex items-center justify-center shadow-sm">
+      <span className="text-5xl sm:text-6xl font-bold text-muted-foreground select-none">
+        {getInitials(name || "?")}
+      </span>
+    </div>
+  )
+}
+
 const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => {
   const params = useParams()
   const { data: session, update } = useSession()
@@ -256,16 +266,6 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
     }
   }
 
-
-
-  const InitialsAvatar = () => (
-    <div className="w-[200px] sm:w-[240px] h-[200px] sm:h-[240px] rounded-full border border-border bg-muted flex items-center justify-center shadow-sm">
-      <span className="text-5xl sm:text-6xl font-bold text-muted-foreground select-none">
-        {getInitials(fullName || "?")}
-      </span>
-    </div>
-  )
-
   return (
     <div className="py-16 md:py-24">
       <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
@@ -292,7 +292,7 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
                 priority
               />
             ) : (
-              <InitialsAvatar />
+              <InitialsAvatar name={fullName} />
             )}
             {isOwner && (
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-full transition-all duration-300 flex items-center justify-center">

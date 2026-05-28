@@ -35,7 +35,7 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
   const [photos, setPhotos] = useState<Photo[]>(
     [...initialPhotos]
       .map((p) => ({ ...p, w: Math.min(Math.max(p.w, 1), 2), h: Math.min(Math.max(p.h, 1), 2) }))
-      .sort((a, b) => a.x - b.x)
+      .toSorted((a, b) => a.x - b.x)
   )
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
@@ -69,13 +69,11 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         portfolioUsername: params.portfolioUsername,
-        // x stores the order index; y unused
         layout: next.map((p, i) => ({ id: p.id, x: i, y: 0, w: p.w, h: p.h })),
       }),
     })
   }
 
-  // ── drag-to-reorder ──────────────────────────────────────────────────────────
   const onDragStart = (id: string) => setDragId(id)
 
   const onDragOver = (e: React.DragEvent, id: string) => {
@@ -98,14 +96,12 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
 
   const onDragEnd = () => { setDragId(null); setOverId(null) }
 
-  // ── resize ───────────────────────────────────────────────────────────────────
   const handleResize = (id: string, w: number, h: number) => {
     const next = photos.map((p) => (p.id === id ? { ...p, w, h } : p))
     setPhotos(next)
     persist(next)
   }
 
-  // ── upload ───────────────────────────────────────────────────────────────────
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -135,7 +131,6 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
     }
   }
 
-  // ── delete ───────────────────────────────────────────────────────────────────
   const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/photos/${id}`, { method: "DELETE" })

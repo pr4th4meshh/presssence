@@ -1,8 +1,6 @@
 import { z } from "zod"
 import { NextResponse } from "next/server"
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
 export async function parseBody<T>(
   req: Request,
   schema: z.ZodSchema<T>
@@ -24,8 +22,6 @@ export async function parseBody<T>(
   }
   return { data: result.data }
 }
-
-// ── shared ────────────────────────────────────────────────────────────────────
 
 export const SocialLinksSchema = z.object({
   twitter: z.string().optional(),
@@ -49,8 +45,6 @@ export const ProjectInputSchema = z.object({
   timeline: z.string().optional().default(""),
   coverImage: z.string().optional().default(""),
 })
-
-// ── auth ──────────────────────────────────────────────────────────────────────
 
 export const SignupSchema = z.object({
   email: z.string().email(),
@@ -76,8 +70,6 @@ export const LoginSchemaFrontend = z.object({
 
 export type FormFields = z.infer<typeof SignupSchemaFrontend>
 export type LoginFields = z.infer<typeof LoginSchemaFrontend>
-
-// ── portfolio setup form (frontend) ──────────────────────────────────────────
 
 export const formSchema = z.object({
   username: z
@@ -106,8 +98,6 @@ export const formSchema = z.object({
 })
 
 export type FormData = z.infer<typeof formSchema>
-
-// ── portfolio API ─────────────────────────────────────────────────────────────
 
 export const CreatePortfolioSchema = z.object({
   username: z
@@ -147,8 +137,6 @@ export const UpdatePortfolioSchema = z.object({
 
 export type UpdatePortfolioData = z.infer<typeof UpdatePortfolioSchema>
 
-// ── work experience ───────────────────────────────────────────────────────────
-
 export const CreateWorkExperienceSchema = z.object({
   company: z.string().min(1).max(100),
   role: z.string().min(1).max(100),
@@ -169,8 +157,6 @@ export const UpdateWorkExperienceSchema = z.object({
   position: z.number().int().optional(),
 })
 
-// ── blog ──────────────────────────────────────────────────────────────────────
-
 export const CreateBlogSchema = z.object({
   title: z.string().min(1).max(200),
   content: z.string().min(1),
@@ -184,8 +170,6 @@ export const UpdateBlogSchema = z.object({
   coverImage: z.string().nullable().optional(),
   published: z.boolean().optional(),
 })
-
-// ── photos ────────────────────────────────────────────────────────────────────
 
 export const CreatePhotoSchema = z.object({
   url: z.string().url(),
@@ -209,13 +193,9 @@ export const PhotoLayoutSchema = z.object({
   layout: z.array(PhotoLayoutItemSchema),
 })
 
-// ── user ──────────────────────────────────────────────────────────────────────
-
 export const UpdateUserPhotoSchema = z.object({
   photoUrl: z.string().url(),
 })
-
-// ── misc ──────────────────────────────────────────────────────────────────────
 
 export const CheckUsernameSchema = z.object({
   username: z
