@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
@@ -12,7 +12,6 @@ import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import { Photo } from "@/types"
 
 const MAX_PHOTOS = 8
-const CELL = 240 // 1×1 = 200×200 px
 const GAP = 8
 
 const SIZES = [
@@ -23,8 +22,8 @@ const SIZES = [
 ] as const
 
 // pixel size of a cell that spans `units` grid units
-function px(units: number) {
-  return units * CELL + (units - 1) * GAP
+function px(units: number, cellSize: number) {
+  return units * cellSize + (units - 1) * GAP
 }
 
 interface PortfolioGalleryProps {
@@ -42,10 +41,27 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
   const [overId, setOverId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [cols, setCols] = useState(4)
+  const [cellSize, setCellSize] = useState(200)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const gridContainerRef = useRef<HTMLDivElement>(null)
   const params = useParams<{ portfolioUsername: string }>()
   const { data: session } = useSession()
   const isOwner = session?.user?.id === userId
+
+  useEffect(() => {
+    const el = gridContainerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(() => {
+      const w = el.clientWidth
+      const c = w < 480 ? 2 : 4
+      const size = Math.floor((w - (c - 1) * GAP) / c)
+      setCols(c)
+      setCellSize(size)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
   const persist = async (next: Photo[]) => {
     await fetch("/api/photos/layout", {
@@ -166,10 +182,11 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
         ) : null
       ) : (
         <div
+          ref={gridContainerRef}
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(4, ${CELL}px)`,
-            gridAutoRows: `${CELL}px`,
+            gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
+            gridAutoRows: `${cellSize}px`,
             gridAutoFlow: "row dense",
             gap: GAP,
           }}
@@ -185,8 +202,8 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
               style={{
                 gridColumn: `span ${photo.w}`,
                 gridRow: `span ${photo.h}`,
-                width: px(photo.w),
-                height: px(photo.h),
+                width: px(photo.w, cellSize),
+                height: px(photo.h, cellSize),
                 transition: "width 300ms ease, height 300ms ease, opacity 200ms ease",
               }}
               className={`group/photo relative overflow-hidden rounded-2xl border bg-muted cursor-grab active:cursor-grabbing
@@ -241,7 +258,7 @@ export default function PortfolioGallery({ initialPhotos, userId }: PortfolioGal
           {/* uploading preview */}
           {uploading && previewUrl && (
             <div
-              style={{ gridColumn: "span 1", gridRow: "span 1", width: CELL, height: CELL }}
+              style={{ gridColumn: "span 1", gridRow: "span 1", width: cellSize, height: cellSize }}
               className="relative overflow-hidden rounded-2xl border border-blue-400 border-dashed"
             >
               <Image src={previewUrl} alt="Uploading…" fill className="object-cover opacity-60" unoptimized />
