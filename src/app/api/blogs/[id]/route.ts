@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/serverAuth"
+import { parseBody, UpdateBlogSchema } from "@/lib/validations"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 
-// GET /api/blogs/[id]?portfolioUsername=xxx  (id can be the mongo id OR slug)
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const url = new URL(req.url)
-    const portfolioUsername = url.searchParams.get("portfolioUsername")
+    const { searchParams } = new URL(req.url)
+    const portfolioUsername = searchParams.get("portfolioUsername")
 
     if (!portfolioUsername) {
       return NextResponse.json({ message: "Missing portfolioUsername" }, { status: 400 })
@@ -26,7 +26,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const session = await getServerSession(authOptions)
     const isOwner = session?.user?.id === portfolio.userId
 
-    // Try lookup by slug first, fall back to id
     const post = await prisma.blogPost.findFirst({
       where: {
         portfolioId: portfolio.id,
@@ -46,7 +45,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-// PUT /api/blogs/[id]
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
@@ -55,7 +53,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const { id } = await params
-    const { title, content, coverImage, published } = await req.json()
 
     const post = await prisma.blogPost.findUnique({
       where: { id },
@@ -70,6 +67,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 
+    const parsed = await parseBody(req, UpdateBlogSchema)
+    if (parsed.error) return parsed.error
+
+    const { title, content, coverImage, published } = parsed.data
+
     const updated = await prisma.blogPost.update({
       where: { id },
       data: {
@@ -78,7 +80,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           content: content.trim(),
           excerpt: content.slice(0, 160).trimEnd(),
         }),
-        ...(coverImage !== undefined && { coverImage: coverImage || null }),
+        ...(coverImage !== undefined && { coverImage: coverImage ?? null }),
         ...(published !== undefined && { published }),
       },
     })
@@ -90,7 +92,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-// DELETE /api/blogs/[id]
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)

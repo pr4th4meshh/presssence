@@ -1,54 +1,39 @@
-import {prisma} from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
+import { parseBody, LoginSchema } from "@/lib/validations"
 import { NextResponse } from "next/server"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { LoginSchema } from "@/lib/validations"
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const bodyResult = LoginSchema.safeParse(body)
+  try {
+    const parsed = await parseBody(req, LoginSchema)
+    if (parsed.error) return parsed.error
 
-  if (!bodyResult.success) {
-    return NextResponse.json(
-      { message: "Invalid input", errors: bodyResult.error.errors },
-      { status: 400 }
-    )
+    const { email, password } = parsed.data
+
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) {
+      return NextResponse.json({ message: "Invalid Email" }, { status: 400 })
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password as string)
+    if (!passwordMatch) {
+      return NextResponse.json({ message: "Invalid Password" }, { status: 400 })
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "24h" })
+
+    const { password: _, ...userWithoutPassword } = user
+
+    const response = NextResponse.json({ token, user: userWithoutPassword }, { status: 200 })
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    })
+
+    return response
+  } catch (error) {
+    console.error("Error logging in:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
-
-  const user = await prisma.user.findUnique({
-    where: { email: bodyResult.data?.email },
-  })
-
-  if (!user) {
-    return NextResponse.json(
-      { message: "Invalid Email" },
-      { status: 400 }
-    )
-  }
-
-  const matchPassword = await bcrypt.compare(
-    bodyResult.data?.password,
-    user.password as string
-  )
-
-  if (!matchPassword) {
-    return NextResponse.json(
-      { message: "Invalid Password" },
-      { status: 400 }
-    )
-  }
-
-  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-    expiresIn: "24h",
-  })
-
-  const { password, ...userWithoutPassword } = user
-
-  const response = NextResponse.json({ token, user: userWithoutPassword }, { status: 200 })
-  response.cookies.set("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  return response
 }

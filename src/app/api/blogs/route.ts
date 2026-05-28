@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/serverAuth"
+import { parseBody, CreateBlogSchema } from "@/lib/validations"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 
@@ -13,11 +14,10 @@ function generateSlug(title: string): string {
     .replace(/(^-|-$)/g, "")
 }
 
-// GET /api/blogs?portfolioUsername=xxx
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url)
-    const portfolioUsername = url.searchParams.get("portfolioUsername")
+    const { searchParams } = new URL(req.url)
+    const portfolioUsername = searchParams.get("portfolioUsername")
 
     if (!portfolioUsername) {
       return NextResponse.json({ message: "Missing portfolioUsername" }, { status: 400 })
@@ -50,7 +50,6 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/blogs
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
@@ -58,11 +57,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 
-    const { title, content, coverImage, published } = await req.json()
+    const parsed = await parseBody(req, CreateBlogSchema)
+    if (parsed.error) return parsed.error
 
-    if (!title?.trim() || !content?.trim()) {
-      return NextResponse.json({ message: "Title and content are required" }, { status: 400 })
-    }
+    const { title, content, coverImage, published } = parsed.data
 
     const portfolio = await prisma.portfolio.findUnique({
       where: { userId: session.user.id },
@@ -89,8 +87,8 @@ export async function POST(req: Request) {
         slug,
         content: content.trim(),
         excerpt,
-        coverImage: coverImage || null,
-        published: published ?? false,
+        coverImage: coverImage ?? null,
+        published,
         order: postCount,
         portfolioId: portfolio.id,
       },

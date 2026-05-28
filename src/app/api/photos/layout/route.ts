@@ -1,15 +1,18 @@
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/serverAuth"
+import { parseBody, PhotoLayoutSchema } from "@/lib/validations"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 
-// PUT /api/photos/layout  body: { portfolioUsername, layout: [{id, x, y, w, h}] }
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
-    const { portfolioUsername, layout } = await req.json()
+    const parsed = await parseBody(req, PhotoLayoutSchema)
+    if (parsed.error) return parsed.error
+
+    const { portfolioUsername, layout } = parsed.data
 
     const portfolio = await prisma.portfolio.findFirst({
       where: { username: portfolioUsername },
@@ -21,7 +24,7 @@ export async function PUT(req: Request) {
     }
 
     await Promise.all(
-      (layout as { id: string; x: number; y: number; w: number; h: number }[]).map((item) =>
+      layout.map((item) =>
         prisma.photo.update({
           where: { id: item.id },
           data: { x: item.x, y: item.y, w: item.w, h: item.h },

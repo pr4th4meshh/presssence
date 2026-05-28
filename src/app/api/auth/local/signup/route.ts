@@ -1,45 +1,29 @@
-import {prisma} from "@/lib/prisma"
+import { prisma } from "@/lib/prisma"
+import { parseBody, SignupSchema } from "@/lib/validations"
 import { NextResponse } from "next/server"
 import bcrypt from "bcrypt"
-import { SignupSchema } from "@/lib/validations"
-import { useAuth } from "@clerk/nextjs"
 
-export async function POST(req: Request) {  
-  const body = await req.json()
-  const bodyResult = SignupSchema.safeParse(body)
+export async function POST(req: Request) {
+  try {
+    const parsed = await parseBody(req, SignupSchema)
+    if (parsed.error) return parsed.error
 
-  if (!bodyResult.success) {
-    return NextResponse.json(
-      { message: "Invalid input", errors: bodyResult.error.errors },
-      { status: 400 }
-    )
+    const { email, username, password } = parsed.data
+
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+    if (existingUser) {
+      return NextResponse.json({ message: "User already exists" }, { status: 400 })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    await prisma.user.create({
+      data: { email, name: username, password: hashedPassword },
+    })
+
+    return NextResponse.json({ message: "User created successfully" }, { status: 201 })
+  } catch (error) {
+    console.error("Error creating user:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
-
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      email: bodyResult.data?.email,
-    },
-  })
-
-  if (existingUser) {
-    return NextResponse.json(
-      { message: "User already exists" },
-      { status: 400 }
-    )
-  }
-
-  const hashedPassword = await bcrypt.hash(bodyResult.data?.password, 10)
-
-  await prisma.user.create({
-    data: {
-      email: bodyResult.data?.email,
-      name: bodyResult.data?.username,
-      password: hashedPassword,
-    },
-  })
-
-  return NextResponse.json(
-    { message: "User created successfully" },
-    { status: 201 }
-  )
 }

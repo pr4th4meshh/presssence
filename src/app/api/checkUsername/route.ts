@@ -1,17 +1,19 @@
-import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma"
+import { parseBody, CheckUsernameSchema } from "@/lib/validations"
+import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
-  const { username } = await req.json();
-
   try {
-    const userExists = await prisma.portfolio.findFirst({
-      where: { username },
-    });
+    const parsed = await parseBody(req, CheckUsernameSchema)
+    if (parsed.error) return parsed.error
 
-    return NextResponse.json({ available: !userExists });
+    const { username } = parsed.data
+
+    const existing = await prisma.portfolio.findFirst({ where: { username } })
+
+    return NextResponse.json({ available: !existing })
   } catch (error) {
-    console.error("Error creating portfolio:", error)
-    return NextResponse.json({ message: 'Internal server error' }, {status: 500});
+    console.error("Error checking username:", error)
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }

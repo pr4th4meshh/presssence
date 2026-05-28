@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/serverAuth"
+import { parseBody, UpdateWorkExperienceSchema } from "@/lib/validations"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 
@@ -21,7 +22,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const entry = await getAuthorizedEntry(id, (session.user as any).id)
     if (!entry) return NextResponse.json({ message: "Forbidden" }, { status: 403 })
 
-    const { company, role, startDate, endDate, description, location, position } = await req.json()
+    const parsed = await parseBody(req, UpdateWorkExperienceSchema)
+    if (parsed.error) return parsed.error
+
+    const { company, role, startDate, endDate, description, location, position } = parsed.data
 
     const updated = await prisma.workExperience.update({
       where: { id },
@@ -29,9 +33,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         ...(company !== undefined && { company }),
         ...(role !== undefined && { role }),
         ...(startDate !== undefined && { startDate }),
-        ...(endDate !== undefined && { endDate: endDate || null }),
-        ...(description !== undefined && { description: description || null }),
-        ...(location !== undefined && { location: location || null }),
+        ...(endDate !== undefined && { endDate: endDate ?? null }),
+        ...(description !== undefined && { description: description ?? null }),
+        ...(location !== undefined && { location: location ?? null }),
         ...(position !== undefined && { position }),
       },
     })
@@ -43,7 +47,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })

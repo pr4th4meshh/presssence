@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/serverAuth"
+import { parseBody, CreateWorkExperienceSchema } from "@/lib/validations"
 import { getServerSession } from "next-auth"
 import { NextResponse } from "next/server"
 
@@ -8,11 +9,10 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions)
     if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
-    const { company, role, startDate, endDate, description, location, portfolioUsername } = await req.json()
+    const parsed = await parseBody(req, CreateWorkExperienceSchema)
+    if (parsed.error) return parsed.error
 
-    if (!company || !role || !startDate || !portfolioUsername) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 })
-    }
+    const { company, role, startDate, endDate, description, location, portfolioUsername } = parsed.data
 
     const portfolio = await prisma.portfolio.findFirst({
       where: { username: portfolioUsername },
@@ -30,9 +30,9 @@ export async function POST(req: Request) {
         company,
         role,
         startDate,
-        endDate: endDate || null,
-        description: description || null,
-        location: location || null,
+        endDate: endDate ?? null,
+        description: description ?? null,
+        location: location ?? null,
         position: count,
         portfolioId: portfolio.id,
       },
