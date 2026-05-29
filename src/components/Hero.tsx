@@ -49,7 +49,7 @@ export default function Hero() {
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false)
   const router = useRouter()
 
-  const words = ["easy", "quick", "beautiful", "modern"]
+  const words = ["easy", "quick", "great", "modern"]
 
   const links = [
     {
@@ -151,12 +151,6 @@ export default function Hero() {
                 No Problem.
               </span>
             </motion.h1>
-
-            {/* Hairline */}
-            <motion.div
-              variants={fadeUp}
-              className="w-10 h-px bg-neutral-200 mx-auto my-8"
-            />
 
             {/* Subtitle + FlipWords */}
             <motion.div
