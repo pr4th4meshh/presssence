@@ -177,7 +177,7 @@ export default function OnboardingForm() {
           {/* Progress bar */}
           <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+              className="h-full bg-black rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${(step / totalSteps) * 100}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}

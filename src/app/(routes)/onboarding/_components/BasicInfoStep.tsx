@@ -62,7 +62,7 @@ export default function BasicInfoStep({ register, errors, watch, setValue }: Bas
     <div className="space-y-6">
       {/* Avatar preview */}
       <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 border border-border/50">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl shrink-0">
+        <div className="w-14 h-14 rounded-full bg-gray-800 flex items-center justify-center text-white font-bold text-xl shrink-0">
           {initials ? initials : <User size={24} />}
         </div>
         <div className="min-w-0">
