@@ -8,6 +8,7 @@ import { formSchema, FormData } from "@/lib/validations"
 import BasicInfoStep from "./_components/BasicInfoStep"
 import ProfessionalDetailsStep from "./_components/ProfessionalDetailsStep"
 import ProjectsStep from "./_components/ProjectsStep"
+import ResumeImport from "./_components/ResumeImport"
 import SocialMediaStep from "./_components/SocialMediaStep"
 import StepNavigation from "./_components/StepNavigation"
 import ThemeSelectionStep from "./_components/ThemeSelectionStep"
@@ -40,10 +41,21 @@ const STEP_TITLES = [
   "Connect your socials",
 ]
 
+/** Roles from a resume, held until the portfolio row exists to attach them to. */
+type PendingRole = {
+  company: string
+  role: string
+  startDate: string
+  endDate?: string
+  location?: string
+  description?: string
+}
+
 export default function OnboardingForm() {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+  const [pendingRoles, setPendingRoles] = useState<PendingRole[]>([])
   const router = useRouter()
 
   const {
@@ -99,6 +111,24 @@ export default function OnboardingForm() {
         toast.error("Failed to create portfolio. Please try again.")
         return
       }
+
+      // Sequential, not parallel: /api/work-experience derives `position` from
+      // the current row count, so concurrent writes race for the same index.
+      if (pendingRoles.length > 0) {
+        try {
+          for (const role of pendingRoles) {
+            await fetch("/api/work-experience", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...role, portfolioUsername: data.username }),
+            })
+          }
+        } catch {
+          // Portfolio itself succeeded; don't fail the flow over re-addable rows.
+          toast.warning("Portfolio created, but some work history didn't save.")
+        }
+      }
+
       toast.success("Portfolio created!")
       router.push(`/${data.username}`)
     } catch {
@@ -111,13 +141,27 @@ export default function OnboardingForm() {
   const totalSteps = STEPS.length
 
   const steps = [
-    <BasicInfoStep
-      key="basic"
-      register={register}
-      errors={errors}
-      watch={watch}
-      setValue={setValue}
-    />,
+    <div key="basic" className="space-y-6">
+      <ResumeImport
+        setValue={setValue}
+        onApplied={(extraction) => {
+          // Submitted from `selectedFeatures`, so setValue("features") alone is dropped.
+          if (extraction.skills.length) setSelectedFeatures(extraction.skills)
+          setPendingRoles(extraction.workExperience)
+        }}
+      />
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+        <span className="text-xs uppercase tracking-wide text-neutral-400">or fill it in</span>
+        <div className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
+      </div>
+      <BasicInfoStep
+        register={register}
+        errors={errors}
+        watch={watch}
+        setValue={setValue}
+      />
+    </div>,
     <ProfessionalDetailsStep
       key="professional"
       register={register}

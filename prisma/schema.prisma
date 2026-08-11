@@ -70,6 +70,7 @@ model Portfolio {
   blogPosts       BlogPost[]
   workExperiences WorkExperience[]
   photos          Photo[]
+  chunks          PortfolioChunk[]
   userId      String       @unique @db.ObjectId
   User        User         @relation(fields: [userId], references: [id])
   createdAt   DateTime     @default(now())
@@ -138,6 +139,36 @@ model Project {
   updatedAt   DateTime  @updatedAt
   portfolioId String    @db.ObjectId
   Portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+/// Embedded slice of a portfolio, used as retrieval context for the chatbot.
+/// Content is denormalised: a chunk stores the text that was embedded, so
+/// editing the source row leaves the vector stale until re-indexed.
+model PortfolioChunk {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  /// "profile" | "skills" | "project" | "experience" | "blog"
+  sourceType  String
+  /// Id of the originating row, when there is one. Null for synthesised chunks.
+  sourceId    String?
+  /// From MODELS.embedding at EMBEDDING_DIMENSIONS. Changing either invalidates every row.
+  embedding   Float[]
+  portfolioId String    @db.ObjectId
+  Portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([portfolioId])
+}
+
+/// Fixed-window rate limit counter. Mongo-backed to avoid a Redis dependency.
+model AiRateLimit {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  /// Scope + identity, e.g. "chat:203.0.113.9" or "resume:<userId>"
+  key       String   @unique
+  count     Int      @default(0)
+  windowEnd DateTime
+
+  @@index([windowEnd])
 }
 
 model WorkExperience {
