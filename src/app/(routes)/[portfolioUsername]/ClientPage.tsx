@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
 import PageHeader from "./_components/PageHeader"
 import PortfolioHero from "./_components/PortfolioHero"
+import PortfolioChat from "./_components/PortfolioChat"
 import PortfolioFooter from "./_components/PortfolioFooter"
 import PortfolioSkills from "./_components/PortfolioSkills"
 import PortfolioProjects from "./_components/PortfolioProjects"
@@ -107,6 +108,11 @@ export default function ClientPage({ initialData }: { initialData: ProfileData }
 
           <PortfolioFooter />
         </div>
+
+        <PortfolioChat
+          portfolioUsername={profileData.username}
+          ownerName={profileData.fullName}
+        />
 
         {isOwner && (
           <FloatingAddButton
