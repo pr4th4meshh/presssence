@@ -35,13 +35,8 @@ export type IndexablePortfolio = {
   blogPosts: Array<{ id: string; title: string; content: string; published: boolean }>
 }
 
-/**
- * Splits on blank lines, packing paragraphs up to the size cap.
- *
- * Splitting at a fixed character count instead would cut mid-sentence, and a
- * chunk that starts halfway through a thought embeds to a vector that matches
- * nothing well.
- */
+/** Packs paragraphs up to the cap. Fixed-width splits cut mid-sentence, and a
+ * chunk starting mid-thought embeds to a vector that matches nothing well. */
 function splitProse(text: string): string[] {
   const paragraphs = text
     .split(/\n\s*\n/)
@@ -70,14 +65,12 @@ function splitProse(text: string): string[] {
 }
 
 /**
- * Chunks along the portfolio's own structure — one project, one role, one chunk
- * — rather than sliding a fixed window over concatenated text. The data is
- * already semantically segmented, and a chunk spanning the end of one project
- * and the start of another retrieves badly for both.
+ * Chunks along the data's own seams — one project, one role, one chunk. A
+ * sliding window would produce chunks spanning two projects that retrieve badly
+ * for both.
  *
- * Every chunk repeats the person's name and the record's title. Chunks are
- * retrieved in isolation, so "Reduced latency by 60%" with no subject is
- * useless to the model; it needs to know who and what it refers to.
+ * Each chunk repeats the person's name and record title: chunks are retrieved
+ * in isolation, so "Reduced latency 60%" with no subject is useless.
  */
 export function buildChunks(portfolio: IndexablePortfolio): Chunk[] {
   const chunks: Chunk[] = []

@@ -27,8 +27,7 @@ function isRateLimit(error: any): boolean {
   return typeof error?.message === "string" && error.message.includes("429")
 }
 
-// Free-tier quota is enforced per minute as well as per day, so bursts get 429s
-// that clear on their own. Only 429s are retried — a 400 will fail identically.
+// Only 429s are retried; a 400 will fail identically on a second attempt.
 async function withBackoff<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: unknown
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -85,9 +84,8 @@ export async function generateText(options: GenerateOptions): Promise<AiResult<s
 }
 
 /**
- * Two layers, doing different jobs: `responseSchema` constrains the decoder so
- * malformed JSON is impossible, and Zod validates that the content is usable.
- * The schema cannot catch empty strings or leaked text — only Zod can.
+ * `responseSchema` constrains the decoder so malformed JSON is impossible; Zod
+ * then checks the content is usable, which the schema cannot do.
  */
 export async function generateStructured<T>(
   options: GenerateOptions & {
@@ -120,8 +118,7 @@ export async function generateStructured<T>(
 
     const raw = response.text ?? ""
     const usage = readUsage(response)
-    // Failed attempts still cost, so callers see true spend.
-    spentTokens += usage.total
+    spentTokens += usage.total // failed attempts still cost
 
     let parsed: unknown
     try {
@@ -173,10 +170,7 @@ export async function* streamText(
   return usage
 }
 
-/**
- * `taskType` is not cosmetic: the same text embeds differently when stored vs
- * searched for. Mismatching them degrades every result without erroring.
- */
+/** `taskType` matters: storing and querying the same text yields different vectors. */
 export async function embed(
   texts: string[],
   taskType: "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY" = "RETRIEVAL_DOCUMENT"
