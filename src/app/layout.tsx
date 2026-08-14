@@ -60,7 +60,9 @@ export default function RootLayout({
 }>) {
   return (
     <NextAuthSessionProvider>
-      <html lang="en" suppressHydrationWarning>
+      {/* motion-safe so anyone with prefers-reduced-motion still gets an
+          instant jump rather than an animation they've asked not to see. */}
+      <html lang="en" suppressHydrationWarning className="motion-safe:scroll-smooth">
         <head>
         <link rel="icon" href="/favicon.ico" />
         </head>

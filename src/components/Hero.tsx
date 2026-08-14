@@ -11,6 +11,7 @@ import { useEffect, useState } from "react"
 import { BiGlobe } from "react-icons/bi"
 import SignupModal from "./SignupModal"
 import { motion } from "framer-motion"
+import ScrollToDemo from "./ScrollToDemo"
 
 interface Portfolio {
   username: string
@@ -44,7 +45,11 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.12 } },
 }
 
-export default function Hero() {
+interface HeroProps {
+  demoProfile?: { username: string; fullName: string; photo: string }
+}
+
+export default function Hero({ demoProfile }: HeroProps) {
   const [user, setUser] = useState<User | null>(null)
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false)
   const router = useRouter()
@@ -188,6 +193,14 @@ export default function Hero() {
                 className="w-[270px] text-lg"
               />
             </motion.div>
+
+            {/* Without this the hero fills the viewport and nothing signals
+                there is a live example below it. */}
+            {demoProfile && (
+              <motion.div variants={fadeUp} className="mt-12 sm:mt-14">
+                <ScrollToDemo {...demoProfile} />
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </div>
