@@ -17,6 +17,8 @@ const poppins = localFont({
 })
 
 export const metadata: Metadata = {
+  // Makes the social preview image URL absolute, which link unfurlers require.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || "https://presssence.me"),
   title: {
     default: "Presssence — Build Your Portfolio in Minutes",
     template: "%s | Presssence",
@@ -63,9 +65,6 @@ export default function RootLayout({
       {/* motion-safe so anyone with prefers-reduced-motion still gets an
           instant jump rather than an animation they've asked not to see. */}
       <html lang="en" suppressHydrationWarning className="motion-safe:scroll-smooth">
-        <head>
-        <link rel="icon" href="/favicon.ico" />
-        </head>
         <body className={`${poppins.variable} antialiased`}>
           <Providers>
             {children}

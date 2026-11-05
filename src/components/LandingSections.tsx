@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 import { motion } from "framer-motion"
 import { useSession } from "next-auth/react"
 import { FileText, LayoutTemplate, MessageSquareText, Palette, PenLine, Share2 } from "lucide-react"
@@ -109,8 +110,9 @@ export default function LandingSections() {
 
       <footer className="border-t border-neutral-200 bg-[#f5f5f5] px-4 py-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-3 text-sm text-neutral-500 sm:flex-row">
-          <span>
-            <span className="font-semibold text-neutral-900">Presssence</span> · © {new Date().getFullYear()}
+          <span className="flex items-center gap-3">
+            <Logo markClassName="h-6 w-6" wordmarkClassName="text-base" />
+            <span>© {new Date().getFullYear()}</span>
           </span>
           <nav className="flex items-center gap-5">
             {signedIn ? (

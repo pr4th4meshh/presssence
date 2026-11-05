@@ -13,6 +13,7 @@ import SocialMediaStep from "./_components/SocialMediaStep"
 import StepNavigation from "./_components/StepNavigation"
 import ThemeSelectionStep from "./_components/ThemeSelectionStep"
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { CheckCircle2 } from "lucide-react"
@@ -259,8 +260,8 @@ export default function OnboardingForm() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6">
       {/* Logo */}
-      <Link href="/" className="text-xl font-bold text-foreground mb-8">
-        Presssence
+      <Link href="/" aria-label="Presssence home" className="mb-8 rounded-md text-foreground">
+        <Logo />
       </Link>
 
       <div className="w-full max-w-lg">

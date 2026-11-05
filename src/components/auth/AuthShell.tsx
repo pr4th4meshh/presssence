@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 
 interface AuthShellProps {
   title: string
@@ -17,8 +18,9 @@ export default function AuthShell({ title, subtitle, children, aside }: AuthShel
         <Link
           href="/"
           className="w-fit rounded-md text-base font-bold tracking-tight text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-4 focus-visible:ring-offset-[#f5f5f5]"
+          aria-label="Presssence home"
         >
-          Presssence
+          <Logo />
         </Link>
 
         <main className="flex flex-1 items-center py-12">

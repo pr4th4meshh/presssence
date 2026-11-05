@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         images: image ? [image] : [],
       },
       icons: {
-        icon: image || "/favicon.ico",
+        icon: image || "/icon.svg",
       },
     }
   } catch {

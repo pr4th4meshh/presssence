@@ -7,7 +7,7 @@ import { createResetToken, RESET_TOKEN_TTL_MINUTES } from "@/lib/passwordReset"
 
 const Body = z.object({ email: z.string().trim().toLowerCase().email() })
 
-function resetEmail(link: string, hasPassword: boolean) {
+function resetEmail(link: string, hasPassword: boolean, base: string) {
   const action = hasPassword ? "reset your password" : "set a password"
   const intro = hasPassword
     ? "Someone asked to reset the password for your Presssence account."
@@ -17,7 +17,7 @@ function resetEmail(link: string, hasPassword: boolean) {
     subject: hasPassword ? "Reset your Presssence password" : "Set a password for Presssence",
     text: `${intro}\n\nUse this link to ${action}:\n${link}\n\n${outro}`,
     html: `<div style="font-family:system-ui,-apple-system,sans-serif;max-width:480px;color:#171717;line-height:1.5">
-  <p style="font-size:18px;font-weight:600;margin:0 0 16px">Presssence</p>
+  <p style="margin:0 0 20px"><img src="${base}/brand/mark.png" width="32" height="32" alt="" style="vertical-align:middle;border:0;border-radius:8px"> <span style="font-size:18px;font-weight:600;letter-spacing:-0.03em;vertical-align:middle;margin-left:6px">presssence</span></p>
   <p>${intro}</p>
   <p style="margin:24px 0"><a href="${link}" style="background:#171717;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:600;display:inline-block">${hasPassword ? "Reset password" : "Set a password"}</a></p>
   <p style="color:#737373;font-size:14px">${outro}</p>
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         const token = await createResetToken(user.id)
         const base = process.env.NEXTAUTH_URL ?? new URL(req.url).origin
         const link = `${base}/auth/reset-password?token=${token}`
-        await sendEmail({ to: user.email, ...resetEmail(link, Boolean(user.password)) })
+        await sendEmail({ to: user.email, ...resetEmail(link, Boolean(user.password), base) })
       } catch (error) {
         console.error("Password reset email failed:", error)
       }

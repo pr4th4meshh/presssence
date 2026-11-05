@@ -1,6 +1,7 @@
 "use client"
 import { signOut, useSession } from "next-auth/react"
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 
 const PageHeader = ({ isOwner = false }: { isOwner?: boolean }) => {
   const { data: session, status } = useSession()
@@ -10,9 +11,10 @@ const PageHeader = ({ isOwner = false }: { isOwner?: boolean }) => {
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link
           href="/"
-          className="text-sm font-semibold text-foreground transition-opacity hover:opacity-70"
+          aria-label="Presssence home"
+          className="rounded-md text-foreground transition-opacity hover:opacity-70"
         >
-          presssence.me
+          <Logo markClassName="h-6 w-6" wordmarkClassName="text-[15px]" />
         </Link>
 
         {status === "authenticated" && session?.user && (

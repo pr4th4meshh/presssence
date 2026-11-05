@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react"
 import { signOut, useSession } from "next-auth/react"
 import Link from "next/link"
+import { Logo } from "@/components/Logo"
 
 const Navbar = () => {
   const { data: session, status } = useSession()
@@ -27,11 +28,8 @@ const Navbar = () => {
               : "bg-white/30 border border-white/50 backdrop-blur-md shadow-sm shadow-black/[0.03]"
           }`}
         >
-          <Link
-            href="/"
-            className="text-base font-bold tracking-tight text-neutral-900"
-          >
-            Presssence
+          <Link href="/" aria-label="Presssence home" className="rounded-md text-neutral-900">
+            <Logo markClassName="h-6 w-6" wordmarkClassName="text-base" />
           </Link>
 
           <div className="w-px h-4 bg-black/10" />
