@@ -83,6 +83,7 @@ export default function SharePresssenceButton() {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls="share-presence-modal"
+        aria-label="Share your page"
       >
         <Share2 />
       </Button>

@@ -16,7 +16,9 @@ interface IProject {
 function formatTimeline(timeline: string): string {
   const date = new Date(timeline)
   if (Number.isNaN(date.getTime())) return timeline
-  return date.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+  // "2025-03" and "2025-03-14" parse as UTC midnight; format in UTC so the
+  // month doesn't slip back a month for visitors west of Greenwich.
+  return date.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
 }
 
 /** Stable hue per title, so a project keeps its colour across renders. */
