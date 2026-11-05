@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import React, { useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import Image from "next/image"
@@ -80,8 +81,9 @@ const EditableField = ({
       if (editValue.trim() !== value.trim()) {
         await onSave(editValue.trim())
       }
-    } catch {
-      // fail silently — user will see the value revert
+    } catch (error) {
+      setEditValue(value)
+      toast.error(error instanceof Error ? error.message : "Couldn't save that change")
     } finally {
       setIsSaving(false)
       setIsEditing(false)
@@ -101,7 +103,8 @@ const EditableField = ({
   }
 
   if (!isOwner) {
-    return <div className={className}>{value || placeholder}</div>
+    // Placeholders are prompts for the owner; visitors see nothing.
+    return value ? <div className={className}>{value}</div> : null
   }
 
   return (
@@ -141,7 +144,7 @@ const EditableField = ({
           className={`${className} group relative cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg px-2 py-1 transition-all duration-200 -mx-2`}
           onClick={() => setIsEditing(true)}
         >
-          {value || placeholder}
+          {value || <span className="opacity-40 italic">{placeholder}</span>}
           <div className="absolute inset-0 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
             <div className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-1 rounded-full mr-2">
               <FiEdit3 size={14} />
@@ -231,12 +234,9 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
   }
 
   const handleSaveField = async (field: string, value: string) => {
-    const updatedPortfolio = {
-      fullName: field === 'fullName' ? value : fullName,
-      profession: field === 'profession' ? value : profession,
-      headline: field === 'headline' ? value : headline,
-      theme,
-    }
+    // Send only the changed field. Sending the hero's copy of `theme` here
+    // overwrote any theme picked from the toolbar since the page loaded.
+    const updatedPortfolio = { [field]: value }
 
     try {
       const response = await fetch(
@@ -373,7 +373,7 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
             isOwner={isOwner}
             className="portfolio-profession text-xl md:text-2xl dark:text-blue-400 text-blue-600 font-medium"
             placeholder="Your Profession"
-            maxLength={100}
+            maxLength={50}
           />
 
           <EditableField
@@ -383,7 +383,7 @@ const PortfolioHero = ({ profileData }: { profileData: ProfileData | null }) => 
             className="portfolio-headline text-base md:text-lg dark:text-gray-300 text-gray-600 leading-relaxed max-w-xl"
             placeholder="A short bio or tagline about yourself"
             multiline={true}
-            maxLength={200}
+            maxLength={160}
           />
         </div>
       </div>
