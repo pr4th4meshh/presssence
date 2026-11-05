@@ -1,5 +1,7 @@
 import { v2 as cloudinary } from "cloudinary"
+import { getServerSession } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
+import { authOptions } from "@/lib/serverAuth"
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -7,18 +9,48 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"])
+const ALLOWED_FOLDERS = new Set([
+  "presssence",
+  "presssence/profiles",
+  "presssence/gallery",
+  "presssence/projects",
+  "presssence/blogs",
+])
+
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData()
-    const file = formData.get("file") as File | null
-    const folder = (formData.get("folder") as string) || "presssence"
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
 
-    if (!file) {
+    const formData = await req.formData()
+    const file = formData.get("file")
+    const requestedFolder = formData.get("folder")
+
+    if (!(file instanceof File)) {
       return NextResponse.json({ message: "No file provided" }, { status: 400 })
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { message: "Only JPEG, PNG, WebP or GIF images are allowed" },
+        { status: 415 }
+      )
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ message: "File must be 5 MB or smaller" }, { status: 413 })
+    }
+
+    const folder =
+      typeof requestedFolder === "string" && ALLOWED_FOLDERS.has(requestedFolder)
+        ? requestedFolder
+        : "presssence"
+
+    const buffer = Buffer.from(await file.arrayBuffer())
 
     const result = await new Promise<{ secure_url: string; public_id: string }>(
       (resolve, reject) => {

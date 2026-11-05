@@ -16,9 +16,13 @@ export async function GET(request: Request) {
     where: {
       id: session.user.id,
     },
-    include: {
-        portfolio: true,
-    }
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      portfolio: true,
+    },
   });
 
   return NextResponse.json(user, { status: 200 })

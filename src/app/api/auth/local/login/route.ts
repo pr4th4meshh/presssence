@@ -4,6 +4,9 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 
+// bcrypt hash of a random string; compared against when the user doesn't exist
+const DUMMY_HASH = "$2b$10$61MjVc6iU.wErttaGqsjaOops8aSqqT3HG.Vn/CdhwExm.AO.SHS6"
+
 export async function POST(req: Request) {
   try {
     const parsed = await parseBody(req, LoginSchema)
@@ -12,13 +15,12 @@ export async function POST(req: Request) {
     const { email, password } = parsed.data
 
     const user = await prisma.user.findUnique({ where: { email } })
-    if (!user) {
-      return NextResponse.json({ message: "Invalid Email" }, { status: 400 })
-    }
 
-    const passwordMatch = await bcrypt.compare(password, user.password as string)
-    if (!passwordMatch) {
-      return NextResponse.json({ message: "Invalid Password" }, { status: 400 })
+    // Same response (and roughly the same timing) whether the email exists or
+    // not, so the endpoint can't be used to discover registered accounts.
+    const passwordMatch = await bcrypt.compare(password, user?.password ?? DUMMY_HASH)
+    if (!user || !user.password || !passwordMatch) {
+      return NextResponse.json({ message: "Invalid email or password" }, { status: 401 })
     }
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "24h" })
@@ -29,6 +31,9 @@ export async function POST(req: Request) {
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
     })
 
     return response

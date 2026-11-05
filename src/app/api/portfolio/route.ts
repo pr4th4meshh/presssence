@@ -136,6 +136,21 @@ export async function PUT(req: Request) {
 
     const updateData = parsed.data
 
+    // Every existing project in the payload must belong to this portfolio,
+    // otherwise a caller could overwrite another user's project by id.
+    const existingProjectIds = (updateData.projects ?? [])
+      .map((p) => p.id)
+      .filter((id): id is string => Boolean(id))
+
+    if (existingProjectIds.length > 0) {
+      const ownedCount = await prisma.project.count({
+        where: { id: { in: existingProjectIds }, portfolioId: portfolio.id },
+      })
+      if (ownedCount !== new Set(existingProjectIds).size) {
+        return NextResponse.json({ message: "Forbidden" }, { status: 403 })
+      }
+    }
+
     await prisma.$transaction(async (tx) => {
       await tx.portfolio.update({
         where: { id: portfolio.id },
@@ -156,7 +171,7 @@ export async function PUT(req: Request) {
           const position = project.position !== undefined ? project.position : i
           if (project.id) {
             await tx.project.update({
-              where: { id: project.id },
+              where: { id: project.id, portfolioId: portfolio.id },
               data: {
                 title: project.title,
                 description: project.description,
