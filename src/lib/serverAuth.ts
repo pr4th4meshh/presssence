@@ -24,15 +24,23 @@ export const authOptions: NextAuthOptions = {
         strategy: 'jwt'
     },
     callbacks: {
-        jwt: async ({ token }) => {
-            const db_user = await prisma.user.findFirst({
-                where: {
-                    email: token.email
-                }
-            })
+        jwt: async ({ token, user }) => {
+            // `user` is only present on sign-in. With the Prisma adapter it is
+            // the DB user (Google) or what authorize() returned (credentials),
+            // so its id is the Mongo id and no lookup is needed.
+            if (user) {
+                token.id = user.id
+                return token
+            }
 
-            if(db_user) {
-                token.id = db_user.id
+            // Tokens issued before the id was stored on them: look it up once,
+            // after which it is carried in the token.
+            if (!token.id && token.email) {
+                const dbUser = await prisma.user.findUnique({
+                    where: { email: token.email },
+                    select: { id: true },
+                })
+                if (dbUser) token.id = dbUser.id
             }
 
             return token;
