@@ -14,6 +14,8 @@ const SUGGESTIONS = [
 interface PortfolioChatProps {
   portfolioUsername: string
   ownerName: string
+  /** Sit above the owner's bottom toolbar on small screens. */
+  raised?: boolean
 }
 
 /**
@@ -23,7 +25,7 @@ interface PortfolioChatProps {
  * total latency is the same either way, but first token lands in ~500ms instead
  * of the user watching a spinner for several seconds.
  */
-export default function PortfolioChat({ portfolioUsername, ownerName }: PortfolioChatProps) {
+export default function PortfolioChat({ portfolioUsername, ownerName, raised = false }: PortfolioChatProps) {
   const [open, setOpen] = useState(false)
   const [turns, setTurns] = useState<Turn[]>([])
   const [input, setInput] = useState("")
@@ -94,7 +96,7 @@ export default function PortfolioChat({ portfolioUsername, ownerName }: Portfoli
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background shadow-lg transition-transform hover:scale-105"
+        className={`fixed ${raised ? "bottom-24 sm:bottom-5" : "bottom-5"} right-5 z-40 flex items-center gap-2 rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background shadow-lg transition-transform hover:scale-105`}
         aria-label={`Ask about ${ownerName}`}
       >
         <MessageSquare className="h-4 w-4" />

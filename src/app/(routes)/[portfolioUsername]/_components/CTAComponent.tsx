@@ -17,10 +17,11 @@ const CTAComponent = () => {
           transition={{ duration: 0.3 }}
           className="w-full dark:bg-neutral-900 bg-gray-900 text-white py-2.5 px-4 flex items-center justify-center gap-3 text-sm relative"
         >
-          <span className="dark:text-gray-300 text-gray-300 text-center">
-            Build your own portfolio like this —{" "}
+          <span className="dark:text-gray-300 text-gray-300 text-center pr-6 sm:pr-0">
+            <span className="hidden sm:inline">Build your own portfolio like this — </span>
+            <span className="sm:hidden">Want a portfolio like this? </span>
             <Link
-              href="/"
+              href="/auth/signup"
               className="font-semibold text-white underline underline-offset-2 hover:text-blue-300 transition-colors inline-flex items-center gap-1"
             >
               Get started free
@@ -28,7 +29,7 @@ const CTAComponent = () => {
           </span>
           <button
             onClick={() => setDismissed(true)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
             aria-label="Dismiss"
           >
             <FiX className="text-sm" />

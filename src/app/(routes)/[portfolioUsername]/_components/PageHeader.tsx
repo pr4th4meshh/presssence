@@ -1,36 +1,42 @@
 "use client"
-import { AnimatedThemeToggler } from "@/components/AnimatedThemeToggler"
-import { useSession } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import React from "react"
-import { FiArrowLeft } from "react-icons/fi"
 
-const PageHeader = () => {
-  const { data: session } = useSession()
-  const params = useParams()
+const PageHeader = ({ isOwner = false }: { isOwner?: boolean }) => {
+  const { data: session, status } = useSession()
 
   return (
     <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="text-sm font-semibold text-foreground transition-opacity hover:opacity-70"
         >
-          <span className="font-semibold text-foreground">presssence.me</span>
+          presssence.me
         </Link>
 
-        {/* <div className="flex items-center gap-3">
-          {session && (
-            <Link
-              href="/"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
+        {status === "authenticated" && session?.user && (
+          <div className="flex items-center gap-4 text-sm">
+            {isOwner ? (
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                You&apos;re viewing your portfolio
+              </span>
+            ) : (
+              <Link
+                href="/me"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                My portfolio
+              </Link>
+            )}
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
-              My portfolio
-            </Link>
-          )}
-          <AnimatedThemeToggler />
-        </div> */}
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

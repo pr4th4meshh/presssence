@@ -65,7 +65,7 @@ export default function ClientPage({ initialData }: { initialData: ProfileData }
         data-theme={theme}
       >
         {!isOwner && <CTAComponent />}
-        <PageHeader />
+        <PageHeader isOwner={isOwner} />
 
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 pb-16">
           <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0}>
@@ -112,6 +112,9 @@ export default function ClientPage({ initialData }: { initialData: ProfileData }
         <PortfolioChat
           portfolioUsername={profileData.username}
           ownerName={profileData.fullName}
+          // The owner's toolbar sits bottom-center; on narrow screens it
+          // reaches the corner, so lift the chat button above it.
+          raised={isOwner}
         />
 
         {isOwner && (
