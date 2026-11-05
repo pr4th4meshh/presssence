@@ -70,50 +70,37 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                if (!credentials?.email) {
-                    throw new Error("Email is required");
-                }
+                // One message for every failure, so the form can't be used to
+                // find out which emails have accounts.
+                const invalid = "Invalid email or password"
+                const email = credentials?.email?.trim()
+                if (!email || !credentials?.password) throw new Error(invalid)
 
-                const user = await prisma.user.findUnique({
-                    where: {
-                        email: credentials.email
-                    }
-                });
+                const user = await prisma.user.findFirst({
+                    where: { email: { equals: email, mode: "insensitive" } },
+                })
 
-                if (!user) {
-                    throw new Error("User not found");
-                }
+                // Google-only accounts have no password and fail here too.
+                if (!user?.password) throw new Error(invalid)
 
-                if (user.password) {
-                    if (!credentials.password) {
-                        throw new Error("Password is required");
-                    }
-
-                    const isPasswordCorrect = await bcrypt.compare(
-                        credentials.password,
-                        user.password
-                    );
-
-                    if (!isPasswordCorrect) {
-                        throw new Error("Invalid credentials");
-                    }
-                } else if (credentials.password) {
-                    throw new Error("This account doesn't use a password");
-                }
+                const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password)
+                if (!isPasswordCorrect) throw new Error(invalid)
 
                 return {
                     id: user.id,
                     name: user.name,
                     email: user.email,
+                    image: user.image,
                 };
             }
         })
     ],
     pages: {
         signIn: '/auth/login',
-        error: '/auth/error',
-        verifyRequest: '/auth/verify-request',
-        newUser: '/auth/new-user'
+        // NextAuth appends ?error=<code>; the login page turns it into a message.
+        error: '/auth/login',
+        // First OAuth sign-in lands here instead of the callback URL.
+        newUser: '/onboarding',
     }
 };
 
