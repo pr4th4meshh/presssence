@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ImagePlus, Loader2, X } from "lucide-react"
+import { ImagePlus, Loader2, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
@@ -12,11 +12,27 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const TITLE_MAX = 100
 const DESCRIPTION_MAX = 500
 
+export interface ExistingProject {
+  id?: string
+  title: string
+  description?: string | null
+  link?: string | null
+  timeline?: string | null
+  coverImage?: string | null
+  position?: number
+}
+
 interface ProjectFormProps {
   username: string
-  onSaved: (projects: unknown[]) => void
+  /** When given, the form edits this project instead of adding a new one. */
+  project?: ExistingProject
+  onSaved: (projects: ExistingProject[]) => void
   onDone: () => void
 }
+
+/** "2025-03" and "2025-03-14" fit the month picker; anything else is free text from older entries. */
+const toMonth = (timeline: string | null | undefined) =>
+  timeline && /^\d{4}-\d{2}(-\d{2})?$/.test(timeline) ? timeline.slice(0, 7) : ""
 
 type Errors = Partial<Record<"title" | "link" | "cover", string>>
 
@@ -34,14 +50,24 @@ function Counter({ value, max }: { value: number; max: number }) {
   )
 }
 
-export default function ProjectForm({ username, onSaved, onDone }: ProjectFormProps) {
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [link, setLink] = useState("")
-  const [month, setMonth] = useState("")
-  const [cover, setCover] = useState<{ preview: string; url: string | null } | null>(null)
+export default function ProjectForm({ username, project, onSaved, onDone }: ProjectFormProps) {
+  const editing = Boolean(project?.id)
+  const [title, setTitle] = useState(project?.title ?? "")
+  const [description, setDescription] = useState(project?.description ?? "")
+  const [link, setLink] = useState(project?.link ?? "")
+  const [month, setMonth] = useState(toMonth(project?.timeline))
+  // Older projects may have a free-text timeline the month picker can't show.
+  // Keep it unless the owner picks a month or clears it.
+  const [legacyTimeline, setLegacyTimeline] = useState(
+    project?.timeline && !toMonth(project.timeline) ? project.timeline : ""
+  )
+  const [cover, setCover] = useState<{ preview: string; url: string | null } | null>(
+    project?.coverImage ? { preview: project.coverImage, url: project.coverImage } : null
+  )
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const uploadId = useRef(0)
@@ -51,7 +77,7 @@ export default function ProjectForm({ username, onSaved, onDone }: ProjectFormPr
   // Free the local preview when it's replaced, removed or the dialog closes.
   const previewUrl = cover?.preview
   useEffect(() => () => {
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl)
   }, [previewUrl])
 
   const pickImage = async (file: File | undefined) => {
@@ -107,24 +133,32 @@ export default function ProjectForm({ username, onSaved, onDone }: ProjectFormPr
     setSaving(true)
     try {
       const current = await fetchCurrent(username)
-      const position = current.projects.reduce((max, p) => Math.max(max, p.position + 1), current.projects.length)
-      // Only the new project is sent: the server creates rows without an id and
-      // leaves every other project as it is.
-      await savePortfolio(username, {
-        projects: [
-          {
-            title: title.trim(),
-            description: description.trim(),
-            link: url,
-            timeline: month,
-            coverImage: cover?.url ?? "",
-            position,
-          },
-        ],
-      })
+      const fields = {
+        title: title.trim(),
+        description: description.trim(),
+        link: url,
+        timeline: month || legacyTimeline,
+        coverImage: cover?.url ?? "",
+      }
+      // Only this one project is sent. The server updates rows with an id,
+      // creates rows without one, and leaves every other project as it is.
+      if (editing) {
+        const saved = current.projects.find((p) => p.id === project!.id)
+        if (!saved) {
+          // Deleted in another tab or device: show the real list instead of an error to puzzle over.
+          onSaved(current.projects as ExistingProject[])
+          toast.error("This project was already deleted, so there was nothing to save.")
+          onDone()
+          return
+        }
+        await savePortfolio(username, { projects: [{ id: project!.id, ...fields, position: saved.position }] })
+      } else {
+        const position = current.projects.reduce((max, p) => Math.max(max, p.position + 1), current.projects.length)
+        await savePortfolio(username, { projects: [{ ...fields, position }] })
+      }
       const updated = await fetchCurrent(username)
-      onSaved(updated.projects)
-      toast.success(`${title.trim()} added`)
+      onSaved(updated.projects as ExistingProject[])
+      toast.success(editing ? "Changes saved" : `${fields.title} added`)
       onDone()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save your project.")
@@ -132,6 +166,25 @@ export default function ProjectForm({ username, onSaved, onDone }: ProjectFormPr
       setSaving(false)
     }
   }
+
+  const remove = async () => {
+    if (!project?.id) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, { method: "DELETE" })
+      // Already gone counts as done.
+      if (!res.ok && res.status !== 404) throw new Error()
+      const updated = await fetchCurrent(username)
+      onSaved(updated.projects as ExistingProject[])
+      toast.success(`${project.title} deleted`)
+      onDone()
+    } catch {
+      toast.error("Couldn't delete this project. Try again.")
+      setDeleting(false)
+    }
+  }
+
+  const busy = saving || deleting
 
   return (
     <form onSubmit={submit} noValidate className="space-y-4">
@@ -215,11 +268,23 @@ export default function ProjectForm({ username, onSaved, onDone }: ProjectFormPr
             id="project-month"
             type="month"
             value={month}
-            onChange={(e) => setMonth(e.target.value)}
+            onChange={(e) => {
+              setMonth(e.target.value)
+              setLegacyTimeline("")
+            }}
             max={new Date().toISOString().slice(0, 7)}
             className={`h-11 ${inputClass(false)}`}
           />
         </div>
+        {legacyTimeline && (
+          <p className="-mt-2 text-sm text-muted-foreground sm:col-span-2">
+            Saved as &ldquo;{legacyTimeline}&rdquo;. Pick a month to replace it, or{" "}
+            <button type="button" onClick={() => setLegacyTimeline("")} className="underline underline-offset-2 hover:text-foreground">
+              remove it
+            </button>
+            .
+          </p>
+        )}
         {errors.link && (
           <p id="project-link-error" className="-mt-2 text-sm text-red-600 sm:col-span-2">
             {errors.link}
@@ -281,15 +346,45 @@ export default function ProjectForm({ username, onSaved, onDone }: ProjectFormPr
         )}
       </div>
 
-      <div className="flex gap-3 border-t border-border pt-4">
-        <Button type="button" variant="outline" className="flex-1" onClick={onDone} disabled={saving}>
-          Cancel
-        </Button>
-        <Button type="submit" className="flex-1" disabled={saving || uploading}>
-          {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-          {uploading ? "Uploading image" : "Add project"}
-        </Button>
-      </div>
+      {confirmingDelete ? (
+        <div role="alert" className="flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 p-3 sm:flex-row sm:items-center dark:border-red-900/50 dark:bg-red-950/30">
+          <p className="flex-1 text-sm text-red-900 dark:text-red-200">
+            Delete <span className="font-medium">{project?.title}</span>? This can&apos;t be undone.
+          </p>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setConfirmingDelete(false)} disabled={deleting} autoFocus>
+              Keep it
+            </Button>
+            <Button type="button" variant="destructive" size="sm" onClick={remove} disabled={deleting}>
+              {deleting && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+              Delete project
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-3 border-t border-border pt-4">
+          {editing && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={busy}
+              className="px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950/40"
+              aria-label="Delete project"
+            >
+              <Trash2 className="h-4 w-4 sm:mr-1.5" aria-hidden />
+              <span className="hidden sm:inline">Delete</span>
+            </Button>
+          )}
+          <Button type="button" variant="outline" className="flex-1" onClick={onDone} disabled={busy}>
+            Cancel
+          </Button>
+          <Button type="submit" className="flex-1" disabled={busy || uploading}>
+            {saving && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
+            {uploading ? "Uploading image" : editing ? "Save changes" : "Add project"}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }
