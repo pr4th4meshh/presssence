@@ -353,19 +353,25 @@ const PortfolioBlogs = ({ initialPosts, initialBlogEnabled, userId }: PortfolioB
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-border/50">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <div
-                  onClick={() => setForm((f) => ({ ...f, published: !f.published }))}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.published}
+                aria-label="Publish post"
+                onClick={() => setForm((f) => ({ ...f, published: !f.published }))}
+                className="flex items-center gap-2 select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span
                   className={`w-9 h-5 rounded-full transition-colors relative ${form.published ? "bg-green-500" : "bg-muted"}`}
                 >
-                  <div
-                    className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  <span
+                    className={`absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white shadow transition-transform ${
                       form.published ? "translate-x-4" : "translate-x-0.5"
                     }`}
                   />
-                </div>
+                </span>
                 <span className="text-sm">{form.published ? "Published" : "Draft"}</span>
-              </label>
+              </button>
 
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>

@@ -89,11 +89,6 @@ export default async function BlogPostPage({ params }: PageProps) {
           <h1 className="portfolio-name text-3xl sm:text-4xl font-bold text-foreground leading-tight mb-4">
             {post.title}
           </h1>
-          {post.excerpt && (
-            <p className="portfolio-headline text-base text-muted-foreground leading-relaxed mb-4">
-              {post.excerpt}
-            </p>
-          )}
           <div className="project-card-date flex items-center gap-1.5 text-sm text-muted-foreground">
             <FiCalendar size={13} />
             {new Date(post.createdAt).toLocaleDateString("en-US", {
