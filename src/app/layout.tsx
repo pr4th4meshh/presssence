@@ -68,7 +68,6 @@ export default function RootLayout({
         </head>
         <body className={`${poppins.variable} antialiased`}>
           <Providers>
-            {/* <ServerNavbar /> */}
             {children}
           </Providers>
           <Toaster position="top-center" />
