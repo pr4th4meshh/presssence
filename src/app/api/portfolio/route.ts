@@ -92,7 +92,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Portfolio not found" }, { status: 404 })
     }
 
-    const blogPostOrder: string[] = (portfolio as any).blogPostOrder ?? []
+    const blogPostOrder = portfolio.blogPostOrder ?? []
     const sortedBlogPosts =
       blogPostOrder.length > 0
         ? [

@@ -12,7 +12,7 @@ export async function DELETE(
     const { id: projectId } = await params;
     
     const session = await getServerSession(authOptions);
-    if (!session?.user.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
@@ -46,7 +46,7 @@ export async function DELETE(
       );
     }
 
-    if (project.Portfolio.User.id !== (session.user as any).id) {
+    if (project.Portfolio.User.id !== session.user.id) {
       return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 

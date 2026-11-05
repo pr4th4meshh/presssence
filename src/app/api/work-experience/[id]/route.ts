@@ -16,10 +16,10 @@ async function getAuthorizedEntry(id: string, userId: string) {
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
     const { id } = await params
-    const entry = await getAuthorizedEntry(id, (session.user as any).id)
+    const entry = await getAuthorizedEntry(id, session.user.id)
     if (!entry) return NextResponse.json({ message: "Forbidden" }, { status: 403 })
 
     const parsed = await parseBody(req, UpdateWorkExperienceSchema)
@@ -50,10 +50,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
     const { id } = await params
-    const entry = await getAuthorizedEntry(id, (session.user as any).id)
+    const entry = await getAuthorizedEntry(id, session.user.id)
     if (!entry) return NextResponse.json({ message: "Forbidden" }, { status: 403 })
 
     await prisma.workExperience.delete({ where: { id } })

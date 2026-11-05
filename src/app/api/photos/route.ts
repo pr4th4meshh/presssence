@@ -7,7 +7,7 @@ import { NextResponse } from "next/server"
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
     const parsed = await parseBody(req, CreatePhotoSchema)
     if (parsed.error) return parsed.error
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       include: { User: true, _count: { select: { photos: true } } },
     })
 
-    if (!portfolio || portfolio.User.id !== (session.user as any).id) {
+    if (!portfolio || portfolio.User.id !== session.user.id) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 })
     }
 

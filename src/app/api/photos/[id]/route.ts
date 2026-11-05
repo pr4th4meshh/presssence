@@ -15,10 +15,10 @@ async function getAuthorizedPhoto(id: string, userId: string) {
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    if (!session?.user?.id) return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 
     const { id } = await params
-    const photo = await getAuthorizedPhoto(id, (session.user as any).id)
+    const photo = await getAuthorizedPhoto(id, session.user.id)
     if (!photo) return NextResponse.json({ message: "Forbidden" }, { status: 403 })
 
     await prisma.photo.delete({ where: { id } })
