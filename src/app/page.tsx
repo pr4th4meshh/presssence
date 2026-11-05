@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero"
 import PresssenceDemo from "@/components/PresssenceDemo"
+import LandingSections from "@/components/LandingSections"
 import { getDemoProfile } from "@/lib/demoProfile"
 
 export const revalidate = 3600
@@ -12,6 +13,7 @@ export default async function Home() {
     <div>
       <Hero demoProfile={{ username, fullName, photo }} />
       <PresssenceDemo />
+      <LandingSections />
     </div>
   )
 }
