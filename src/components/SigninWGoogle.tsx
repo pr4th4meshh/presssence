@@ -5,13 +5,18 @@ import { signIn } from "next-auth/react"
 
 interface ISigninWGoogle {
   className?: string
+  callbackUrl?: string
+  label?: string
 }
-const SigninWGoogle = ({className}: ISigninWGoogle) => {
-  const handleSignIn = () => {
-    signIn("google")
-    console.log("clicked")
-  }
-  return <PrimaryButton className={className} title="Sign in with Google" onClick={handleSignIn} />
+
+const SigninWGoogle = ({ className, callbackUrl = "/me", label = "Sign in with Google" }: ISigninWGoogle) => {
+  return (
+    <PrimaryButton
+      className={className}
+      title={label}
+      onClick={() => signIn("google", { callbackUrl })}
+    />
+  )
 }
 
 export default SigninWGoogle

@@ -28,7 +28,7 @@ export const RESERVED_USERNAMES = new Set([
   "api", "auth", "onboarding", "login", "signup", "register", "logout", "settings",
   "dashboard", "account", "admin", "blog", "about", "pricing", "help", "support",
   "terms", "privacy", "static", "public", "assets", "_next", "favicon", "robots",
-  "sitemap", "presssence", "www", "app",
+  "sitemap", "presssence", "www", "app", "me",
 ])
 
 export const UsernameSchema = z
@@ -64,15 +64,26 @@ export const ProjectInputSchema = z.object({
 })
 
 export const SignupSchemaFrontend = z.object({
-  email: z.string().email(),
-  name: z.string().min(3),
-  password: z.string().min(6),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
+  name: z.string().trim().min(2, "Enter your name").max(50),
+  password: z
+    .string()
+    .min(8, "Use at least 8 characters")
+    .max(72, "Use 72 characters or fewer"), // bcrypt ignores bytes past 72
 })
 
 export const LoginSchemaFrontend = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().trim().email("Enter a valid email address"),
+  password: z.string().min(1, "Enter your password"),
 })
+
+/** Only same-site paths, so ?callbackUrl= can't redirect users off-site. */
+export function safeCallbackUrl(value: string | null | undefined, fallback = "/me"): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) {
+    return fallback
+  }
+  return value
+}
 
 export type FormFields = z.infer<typeof SignupSchemaFrontend>
 export type LoginFields = z.infer<typeof LoginSchemaFrontend>

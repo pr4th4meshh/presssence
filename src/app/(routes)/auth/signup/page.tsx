@@ -5,15 +5,25 @@ import SigninWGoogle from "@/components/SigninWGoogle"
 import BorderStyleButton from "@/components/ui/border-button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FormFields, SignupSchemaFrontend } from "@/lib/validations"
+import { FormFields, SignupSchemaFrontend, safeCallbackUrl } from "@/lib/validations"
+import { signIn } from "next-auth/react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import React, { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import React, { Suspense, useState } from "react"
 import { useForm } from "react-hook-form"
 import { PiSpinner } from "react-icons/pi"
 
+const SignUpPage = () => (
+  <Suspense>
+    <SignUp />
+  </Suspense>
+)
+
 const SignUp = () => {
+  const searchParams = useSearchParams()
+  // New accounts have no portfolio yet, so /me sends them to onboarding.
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"))
   const [errorMessage, setErrorMessage] = useState("")
   const {
     handleSubmit,
@@ -28,14 +38,21 @@ const SignUp = () => {
     setErrorMessage("")
     try {
       const { name, email, password } = data
-      const response = await registerUser(name, email, password, "")
+      const response = await registerUser(name, email, password)
       if (response?.error) {
         setErrorMessage(response.error)
-      } else {
-        router.push("/auth/login")
+        return
       }
-    } catch (error) {
-      console.error(error)
+      // Sign straight in rather than making a new user type it all again.
+      const result = await signIn("credentials", { redirect: false, email, password })
+      if (result?.error) {
+        router.push("/auth/login")
+        return
+      }
+      router.replace(callbackUrl)
+      router.refresh()
+    } catch {
+      setErrorMessage("Something went wrong. Please try again.")
     }
   }
 
@@ -51,7 +68,7 @@ const SignUp = () => {
         </div>
 
         <div className="w-full p-8 bg-card border border-border shadow-xl rounded-2xl">
-          <SigninWGoogle className="w-full text-sm mb-4" />
+          <SigninWGoogle callbackUrl={callbackUrl} label="Sign up with Google" className="w-full text-sm mb-4" />
 
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-border" />
@@ -64,7 +81,7 @@ const SignUp = () => {
               <Label htmlFor="name" className="block text-sm font-medium mb-1.5">
                 Full name
               </Label>
-              <Input id="name" type="text" {...register("name")} placeholder="John Doe" />
+              <Input id="name" type="text" autoComplete="name" autoFocus {...register("name")} placeholder="John Doe" />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
             </div>
 
@@ -72,7 +89,7 @@ const SignUp = () => {
               <Label htmlFor="email" className="block text-sm font-medium mb-1.5">
                 Email address
               </Label>
-              <Input id="email" type="email" {...register("email")} placeholder="you@example.com" />
+              <Input id="email" type="email" autoComplete="email" {...register("email")} placeholder="you@example.com" />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
 
@@ -80,7 +97,7 @@ const SignUp = () => {
               <Label htmlFor="password" className="block text-sm font-medium mb-1.5">
                 Password
               </Label>
-              <Input id="password" type="password" {...register("password")} placeholder="••••••••" />
+              <Input id="password" type="password" autoComplete="new-password" {...register("password")} placeholder="At least 8 characters" />
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
@@ -110,4 +127,4 @@ const SignUp = () => {
   )
 }
 
-export default SignUp
+export default SignUpPage
