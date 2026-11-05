@@ -43,3 +43,39 @@ export function normalizeUrl(input: string): string | null {
     return null
   }
 }
+
+/**
+ * Applies a change to the skills as they are saved right now, not as this tab
+ * last saw them, so edits made elsewhere since the page loaded survive.
+ */
+export async function updateFeatures(username: string, change: (current: string[]) => string[]) {
+  const current = await fetchCurrent(username)
+  const next = change(current.features ?? [])
+  await savePortfolio(username, { features: next })
+  return next
+}
+
+export interface SocialState {
+  links: Record<string, string>
+  order: string[]
+}
+
+/** Saved links as a clean map plus an order that covers every link exactly once. */
+export function readSocials(raw: Record<string, unknown> | null | undefined): SocialState {
+  const links: Record<string, string> = {}
+  for (const [key, value] of Object.entries(raw ?? {})) {
+    if (key !== "order" && typeof value === "string" && value.trim()) links[key] = value.trim()
+  }
+  const savedOrder = Array.isArray(raw?.order) ? (raw!.order as string[]) : []
+  const order = [...savedOrder.filter((p) => links[p]), ...Object.keys(links).filter((p) => !savedOrder.includes(p))]
+  return { links, order: Array.from(new Set(order)) }
+}
+
+/** Same idea as updateFeatures, for links and their order. */
+export async function updateSocials(username: string, change: (current: SocialState) => SocialState) {
+  const current = await fetchCurrent(username)
+  const next = change(readSocials(current.socialMedia))
+  const order = next.order.filter((p) => next.links[p])
+  await savePortfolio(username, { socialLinks: next.links, socialLinksOrder: order })
+  return { links: next.links, order }
+}

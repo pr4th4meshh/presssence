@@ -1,10 +1,10 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Loader2, Plus, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { fetchCurrent, savePortfolio } from "./api"
+import { fetchCurrent, updateFeatures } from "./api"
 
 const SUGGESTIONS = [
   "React", "TypeScript", "Next.js", "Node.js", "Python", "Figma",
@@ -22,12 +22,24 @@ interface SkillsFormProps {
 
 const key = (s: string) => s.trim().toLowerCase()
 
-export default function SkillsForm({ username, existing, onSaved, onDone }: SkillsFormProps) {
+export default function SkillsForm({ username, existing: initialExisting, onSaved, onDone }: SkillsFormProps) {
+  const [existing, setExisting] = useState(initialExisting)
   const [pending, setPending] = useState<string[]>([])
   const [draft, setDraft] = useState("")
   const [saving, setSaving] = useState(false)
   const [hint, setHint] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // The page's copy can be out of date; check what's actually saved.
+  useEffect(() => {
+    let cancelled = false
+    fetchCurrent(username)
+      .then((current) => !cancelled && setExisting(current.features ?? []))
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [username])
 
   const taken = new Set([...existing, ...pending].map(key))
 
@@ -73,10 +85,10 @@ export default function SkillsForm({ username, existing, onSaved, onDone }: Skil
     if (!toAdd.length) return
     setSaving(true)
     try {
-      const current = await fetchCurrent(username)
-      const currentKeys = new Set(current.features.map(key))
-      const merged = [...current.features, ...toAdd.filter((s) => !currentKeys.has(key(s)))]
-      await savePortfolio(username, { features: merged })
+      const merged = await updateFeatures(username, (current) => {
+        const currentKeys = new Set(current.map(key))
+        return [...current, ...toAdd.filter((s) => !currentKeys.has(key(s)))]
+      })
       onSaved(merged)
       toast.success(toAdd.length === 1 ? `Added ${toAdd[0]}` : `Added ${toAdd.length} skills`)
       onDone()

@@ -1,274 +1,199 @@
 "use client"
-import { openAddDialog } from "./addDialogEvents"
 
-import type React from "react"
 import { useEffect, useRef, useState } from "react"
-import { FiTrash2 } from "react-icons/fi"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  type DropResult,
-} from "@hello-pangea/dnd"
 import { useParams } from "next/navigation"
+import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd"
+import { Plus, X } from "lucide-react"
 import { toast } from "sonner"
+import { openAddDialog } from "./addDialogEvents"
+import { updateFeatures } from "./addDialogs/api"
 
-// Individual Editable Skill Component
-const EditableSkill = ({
+const MAX_SKILL_LENGTH = 40
+const key = (s: string) => s.trim().toLowerCase()
+
+const chipClass =
+  "skill-badge inline-flex items-center rounded-full border text-sm font-medium dark:bg-neutral-800 bg-gray-100 dark:text-gray-200 text-gray-700 dark:border-neutral-700 border-gray-200"
+
+/** Inline rename. Enter or clicking away saves, Escape cancels. */
+function SkillEditor({
   skill,
-  index,
-  onSave,
-  onRemove,
-  isOwner,
+  isTaken,
+  onCommit,
+  onCancel,
 }: {
   skill: string
-  index: number
-  onSave: (index: number, newValue: string) => Promise<void>
-  onRemove: (index: number) => void
-  isOwner: boolean
-}) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(skill)
-  const [isSaving, setIsSaving] = useState(false)
-
-  const inputRef = useRef<HTMLInputElement | null>(null)
-  const wrapperRef = useRef<HTMLDivElement>(null)
-  const saveTimeout = useRef<NodeJS.Timeout | null>(null)
-
-  const handleSave = async () => {
-    if (editValue.trim() === skill.trim()) {
-      setIsEditing(false)
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      await onSave(index, editValue.trim())
-      setIsEditing(false)
-    } catch (error) {
-      console.error("Error saving skill:", error)
-    } finally {
-      setIsSaving(false)
-    }
-  }
+  isTaken: (value: string) => boolean
+  onCommit: (value: string) => void
+  onCancel: () => void
+}) {
+  const [value, setValue] = useState(skill)
+  const [error, setError] = useState<string | null>(null)
+  const done = useRef(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!isEditing) return
+    inputRef.current?.select()
+  }, [])
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(event.target as Node)
-      ) {
-        handleSave()
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [isEditing, editValue])
-
-  useEffect(() => {
-    if (!isEditing) return
-
-    if (saveTimeout.current) clearTimeout(saveTimeout.current)
-
-    saveTimeout.current = setTimeout(() => {
-      if (editValue.trim() !== skill.trim()) {
-        handleSave()
-      } else {
-        setIsEditing(false)
-      }
-    }, 3000)
-
-    return () => {
-      if (saveTimeout.current) clearTimeout(saveTimeout.current)
-    }
-  }, [editValue])
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      setEditValue(skill)
-      setIsEditing(false)
-    }
-
-    if (e.key === "Enter") {
-      e.preventDefault()
-      handleSave()
-    }
+  const cancel = () => {
+    done.current = true
+    onCancel()
   }
 
-  if (!isOwner) {
-    return (
-      <span className="skill-badge inline-flex items-center px-3 py-1 rounded-full text-sm font-medium dark:bg-neutral-800 bg-gray-100 dark:text-gray-200 text-gray-700 border dark:border-neutral-700 border-gray-200">
-        {skill}
-      </span>
-    )
-  }
-
-  if (isEditing) {
-    return (
-      <div className="relative" ref={wrapperRef}>
-        <Input
-          type="text"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleSave}
-          className="border-2 border-blue-500 text-sm px-3 py-1 h-8 rounded-full w-32 bg-transparent focus:outline-none"
-          placeholder="Skill name"
-          maxLength={50}
-          autoFocus
-        />
-      </div>
-    )
+  /** Enter keeps the field open to fix a duplicate; clicking away drops the change instead. */
+  const commit = (fromBlur: boolean) => {
+    if (done.current) return
+    const next = value.trim()
+    if (!next || next === skill) return cancel()
+    if (key(next) !== key(skill) && isTaken(next)) {
+      if (fromBlur) {
+        toast.error(`${next} is already on your list`)
+        return cancel()
+      }
+      return setError(`${next} is already on your list`)
+    }
+    done.current = true
+    onCommit(next)
   }
 
   return (
-    <div className="group relative flex items-center gap-1">
-      <span
-        className="skill-badge inline-flex items-center px-3 py-1 rounded-full text-sm font-medium dark:bg-neutral-800 bg-gray-100 dark:text-gray-200 text-gray-700 border dark:border-neutral-700 border-gray-200 cursor-pointer hover:border-blue-400 transition-colors"
-        onClick={() => setIsEditing(true)}
-      >
-        {skill}
-      </span>
-      <Button
-        onClick={() => onRemove(index)}
-        size="sm"
-        className="opacity-0 group-hover:opacity-100 transition-opacity h-5 w-5 p-0 rounded-full bg-red-500 hover:bg-red-600 text-white flex-shrink-0"
-      >
-        <FiTrash2 size={8} />
-      </Button>
-    </div>
+    <span className="relative inline-flex">
+      <input
+        ref={inputRef}
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value)
+          setError(null)
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault()
+            commit(false)
+          } else if (e.key === "Escape") {
+            e.preventDefault()
+            cancel()
+          }
+        }}
+        onBlur={() => commit(true)}
+        maxLength={MAX_SKILL_LENGTH}
+        size={Math.max(value.length, 4)}
+        aria-label={`Rename ${skill}`}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? "skill-edit-error" : undefined}
+        className={`h-[30px] rounded-full border-2 bg-background px-3 text-sm font-medium outline-none ${
+          error ? "border-red-500" : "border-foreground"
+        }`}
+      />
+      {error && (
+        <span
+          id="skill-edit-error"
+          role="alert"
+          className="absolute left-0 top-full z-10 mt-1 whitespace-nowrap rounded-md bg-red-600 px-2 py-1 text-xs text-white"
+        >
+          {error}
+        </span>
+      )}
+    </span>
   )
 }
 
 interface PortfolioSkillsProps {
-  skillsAndFeatures: {
-    features: string[]
-    userId?: string
-  }
+  skillsAndFeatures: { features: string[]; userId?: string }
   isOwner?: boolean
 }
 
-const PortfolioSkills = ({
-  skillsAndFeatures,
-  isOwner = false,
-}: PortfolioSkillsProps) => {
-  const [skills, setSkills] = useState<string[]>(
-    skillsAndFeatures?.features || []
-  )
-  const params = useParams()
+const PortfolioSkills = ({ skillsAndFeatures, isOwner = false }: PortfolioSkillsProps) => {
+  const [skills, setSkills] = useState<string[]>(skillsAndFeatures?.features || [])
+  const [editing, setEditing] = useState<string | null>(null)
+  const params = useParams<{ portfolioUsername: string }>()
+  const username = params.portfolioUsername
 
   useEffect(() => {
     setSkills(skillsAndFeatures?.features || [])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(skillsAndFeatures?.features)])
 
-  const handleRemoveSkill = async (indexToRemove: number) => {
-    const updatedSkills = skills.filter((_, index) => index !== indexToRemove)
-    setSkills(updatedSkills)
-    await handleSaveSkills(updatedSkills)
-  }
-
-  const handleUpdateSkill = async (index: number, newValue: string) => {
-    const updatedSkills = [...skills]
-    updatedSkills[index] = newValue
-    await handleSaveSkills(updatedSkills)
-  }
-
-  const handleSaveSkills = async (updatedSkills: string[]) => {
+  /**
+   * Shows the change straight away, applies it to the saved list (not this
+   * tab's copy), then shows the result. Rolls back if the save fails.
+   */
+  const apply = async (local: string[], change: (current: string[]) => string[], failure: string) => {
+    const previous = skills
+    setSkills(local)
     try {
-      setSkills(updatedSkills);
-  
-      const res = await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...skillsAndFeatures,
-          features: updatedSkills,
-        }),
-      });
-  
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to update skills");
-      }
-
-      await res.json();
-      toast.success("Skills updated.");
+      setSkills(await updateFeatures(username, change))
+      return true
     } catch {
-      toast.error("Failed to update skills.");
+      setSkills(previous)
+      toast.error(failure)
+      return false
     }
-  };
-  
-  
-
-  const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) return // if item isnt dropped at a valid position return back to original position
-    const items = Array.from(skills)
-    const [reorderdItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderdItem)
-
-    setSkills(items)
-    if (isOwner) await handleSaveSkills(items)
   }
 
-  return (
-    skills.length > 0 ? (
+  const rename = (from: string, to: string) => {
+    setEditing(null)
+    apply(
+      skills.map((s) => (s === from ? to : s)),
+      (current) => (current.includes(from) ? current.map((s) => (s === from ? to : s)) : [...current, to]),
+      `Couldn't rename ${from}. Try again.`
+    )
+  }
+
+  const remove = async (skill: string) => {
+    const index = skills.indexOf(skill)
+    const ok = await apply(
+      skills.filter((s) => s !== skill),
+      (current) => current.filter((s) => s !== skill),
+      `Couldn't remove ${skill}. Try again.`
+    )
+    if (!ok) return
+    toast(`Removed ${skill}`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          const restore = (list: string[]) => {
+            if (list.some((s) => key(s) === key(skill))) return list
+            const next = [...list]
+            next.splice(Math.min(index, next.length), 0, skill)
+            return next
+          }
+          apply(restore(skills.filter((s) => s !== skill)), restore, `Couldn't bring back ${skill}.`)
+        },
+      },
+    })
+  }
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination || result.destination.index === result.source.index) return
+    const items = Array.from(skills)
+    const [moved] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, moved)
+    apply(
+      items,
+      // Keep the new order for skills this tab knows about; anything added elsewhere goes at the end.
+      (current) => [...items.filter((s) => current.includes(s)), ...current.filter((s) => !items.includes(s))],
+      "Couldn't save the new order. Try again."
+    )
+  }
+
+  const header = (
+    <div className="mb-4 flex items-baseline justify-between gap-4">
+      <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400">
+        Skills &amp; Technologies
+      </h2>
+      {isOwner && skills.length > 0 && (
+        <p className="hidden text-xs text-muted-foreground sm:block">
+          Click a skill to rename{skills.length > 1 ? ", drag to reorder" : ""}
+        </p>
+      )}
+    </div>
+  )
+
+  if (skills.length === 0) {
+    if (!isOwner) return null
+    return (
       <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
-        <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400 mb-4">
-          Skills &amp; Technologies
-        </h2>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="skills" direction="horizontal">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="flex flex-wrap gap-2"
-              >
-                {skills.map((skill: string, index: number) => (
-                  <Draggable
-                    key={skill}
-                    draggableId={`${skill}-${index}`}
-                    index={index}
-                    isDragDisabled={!isOwner}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        <EditableSkill
-                          skill={skill}
-                          index={index}
-                          onSave={handleUpdateSkill}
-                          onRemove={handleRemoveSkill}
-                          isOwner={isOwner}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-      </div>
-    ) : isOwner ? (
-      <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
-        <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400 mb-4">
-          Skills &amp; Technologies
-        </h2>
+        {header}
         <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
           <p className="text-sm text-muted-foreground">List the tools and technologies you work with.</p>
           <button
@@ -280,7 +205,85 @@ const PortfolioSkills = ({
           </button>
         </div>
       </div>
-    ) : null
+    )
+  }
+
+  if (!isOwner) {
+    return (
+      <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
+        {header}
+        <ul className="flex flex-wrap gap-2">
+          {skills.map((skill) => (
+            <li key={skill} className={`${chipClass} px-3 py-1`}>
+              {skill}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  return (
+    <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
+      {header}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="skills" direction="horizontal">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap items-center gap-2">
+              {skills.map((skill, index) => (
+                <Draggable key={skill} draggableId={`skill-${skill}`} index={index} isDragDisabled={editing !== null}>
+                  {(provided, snapshot) => (
+                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                      {editing === skill ? (
+                        <SkillEditor
+                          skill={skill}
+                          isTaken={(value) => skills.some((s) => s !== skill && key(s) === key(value))}
+                          onCommit={(value) => rename(skill, value)}
+                          onCancel={() => setEditing(null)}
+                        />
+                      ) : (
+                        <span
+                          className={`${chipClass} group/chip transition-colors hover:border-foreground/40 ${
+                            snapshot.isDragging ? "shadow-lg" : ""
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setEditing(skill)}
+                            aria-label={`Rename ${skill}`}
+                            className="rounded-l-full py-1 pl-3 pr-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                          >
+                            {skill}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => remove(skill)}
+                            aria-label={`Remove ${skill}`}
+                            className="mr-1 rounded-full p-0.5 text-muted-foreground opacity-40 transition-opacity hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 group-hover/chip:opacity-100"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              <button
+                type="button"
+                onClick={() => openAddDialog("feature")}
+                aria-label="Add skills"
+                className="inline-flex h-[30px] items-center gap-1 rounded-full border border-dashed border-border px-3 text-sm text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+                Add
+              </button>
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    </div>
   )
 }
 
