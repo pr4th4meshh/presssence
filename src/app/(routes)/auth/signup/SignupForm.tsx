@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -10,6 +10,7 @@ import { registerUser } from "@/actions/registerUser"
 import { FormFields, SignupSchemaFrontend } from "@/lib/validations"
 import AuthShell from "@/components/auth/AuthShell"
 import PortfolioPreview from "@/components/auth/PortfolioPreview"
+import { peekClaimedUsername } from "@/lib/claimedUsername"
 import {
   Field,
   FormError,
@@ -36,6 +37,9 @@ export default function SignupForm({ callbackUrl }: { callbackUrl: string }) {
   } = useForm<FormFields>({ resolver: zodResolver(SignupSchemaFrontend) })
   const pending = isSubmitting || redirecting
   const name = watch("name")?.trim() ?? ""
+  // Read after mount: localStorage doesn't exist during the server render.
+  const [claimed, setClaimed] = useState<string | null>(null)
+  useEffect(() => setClaimed(peekClaimedUsername()), [])
 
   const onSubmit = async ({ name, email, password }: FormFields) => {
     setErrorMessage("")
@@ -64,7 +68,7 @@ export default function SignupForm({ callbackUrl }: { callbackUrl: string }) {
       subtitle="It's free. You'll have a live link in a few minutes."
       aside={
         <>
-          <PortfolioPreview username={suggestUsername(name)} name={name} draft />
+          <PortfolioPreview username={claimed ?? suggestUsername(name)} name={name} draft />
           <p className="mt-6 max-w-sm text-center text-sm leading-relaxed text-neutral-500">
             This is your page. You&apos;ll pick your URL and add your work, skills and links next.
           </p>

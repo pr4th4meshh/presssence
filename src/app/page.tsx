@@ -7,13 +7,24 @@ export const revalidate = 3600
 
 export default async function Home() {
   // Shared with PresssenceDemo via React cache(), so this is one query.
-  const { username, fullName, photo } = await getDemoProfile()
+  const demo = await getDemoProfile()
+  const { username, fullName, photo } = demo
 
   return (
     <div>
       <Hero demoProfile={{ username, fullName, photo }} />
       <PresssenceDemo />
-      <LandingSections />
+      <LandingSections
+        demo={{
+          username: demo.username,
+          fullName: demo.fullName,
+          profession: demo.profession,
+          headline: demo.headline,
+          photo: demo.photo,
+          skills: demo.skills,
+          projects: demo.projects,
+        }}
+      />
     </div>
   )
 }

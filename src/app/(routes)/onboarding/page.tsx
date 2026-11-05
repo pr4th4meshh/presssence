@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm, FieldErrors } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
@@ -14,6 +14,7 @@ import StepNavigation from "./_components/StepNavigation"
 import ThemeSelectionStep from "./_components/ThemeSelectionStep"
 import Link from "next/link"
 import { Logo } from "@/components/Logo"
+import { takeClaimedUsername } from "@/lib/claimedUsername"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { CheckCircle2 } from "lucide-react"
@@ -109,6 +110,13 @@ export default function OnboardingForm() {
   })
 
   const [checkingUsername, setCheckingUsername] = useState(false)
+
+  // A name claimed on the landing page fills the username field.
+  useEffect(() => {
+    const claimed = takeClaimedUsername()
+    if (claimed && !watch("username")) setValue("username", claimed, { shouldValidate: true })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /** Server-side availability check; the field validation only covers format. */
   const ensureUsernameAvailable = async (username: string): Promise<boolean> => {

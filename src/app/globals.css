@@ -257,3 +257,8 @@
     animation: none;
     mix-blend-mode: normal;
 }
+
+/* Text caret on the landing page */
+@keyframes blink {
+  50% { opacity: 0; }
+}
