@@ -20,6 +20,7 @@ export default function BasicInfoStep({ register, errors, watch, setValue }: Bas
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(true)
   const [checkingUsernameLoading, setCheckingUsernameLoading] = useState(false)
   const [hasChecked, setHasChecked] = useState(false)
+  const [unavailableReason, setUnavailableReason] = useState<string | null>(null)
 
   const checkingUsername = watch("username")
   const fullName = watch("fullName")
@@ -41,11 +42,11 @@ export default function BasicInfoStep({ register, errors, watch, setValue }: Bas
         })
         const data = await res.json()
         setIsUsernameAvailable(res.ok ? data.available : true)
-        setHasChecked(true)
-      } catch (error) {
-        console.error(error)
-        setIsUsernameAvailable(false)
-        setHasChecked(true)
+        setUnavailableReason(data.reason ?? null)
+        setHasChecked(res.ok)
+      } catch {
+        // Network failure: say nothing here; Continue re-checks and reports it.
+        setHasChecked(false)
       } finally {
         setCheckingUsernameLoading(false)
       }
@@ -87,7 +88,11 @@ export default function BasicInfoStep({ register, errors, watch, setValue }: Bas
             autoFocus
             className="pr-10"
             {...register("username")}
-            onChange={(e) => setValue("username", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+            onChange={(e) =>
+              setValue("username", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""), {
+                shouldValidate: Boolean(errors.username),
+              })
+            }
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             {checkingUsernameLoading && (
@@ -111,10 +116,10 @@ export default function BasicInfoStep({ register, errors, watch, setValue }: Bas
           )}
           {!checkingUsernameLoading && hasChecked && !isUsernameAvailable && (
             <p className="text-xs text-red-500 flex items-center gap-1">
-              <XCircle size={11} /> Username is taken or unavailable
+              <XCircle size={11} /> {unavailableReason ?? "That username is already taken"}
             </p>
           )}
-          {errors.username && (
+          {errors.username && !(hasChecked && !isUsernameAvailable) && (
             <p className="text-xs text-red-500">{errors.username.message}</p>
           )}
         </div>

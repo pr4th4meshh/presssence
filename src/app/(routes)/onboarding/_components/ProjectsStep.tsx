@@ -1,8 +1,9 @@
 "use client"
 
-import { UseFormRegister, FieldErrors, Control, useFieldArray, UseFormWatch } from "react-hook-form"
+import { UseFormRegister, FieldErrors, Control, useFieldArray, UseFormWatch, UseFormSetValue } from "react-hook-form"
+import { toast } from "sonner"
 import { FormData } from "@/lib/validations"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { uploadToCloudinary } from "@/lib/uploadToCloudinary"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,9 +28,10 @@ interface ProjectsStepProps {
   errors: FieldErrors<FormData>
   control: Control<FormData>
   watch: UseFormWatch<FormData>
+  setValue: UseFormSetValue<FormData>
 }
 
-export default function ProjectsStep({ register, errors, control, watch }: ProjectsStepProps) {
+export default function ProjectsStep({ register, errors, control, watch, setValue }: ProjectsStepProps) {
   const { fields, append, remove } = useFieldArray({ control, name: "projects" })
   const [uploading, setUploading] = useState<Set<number>>(new Set())
   const [uploadedImages, setUploadedImages] = useState<Record<number, string>>({})
@@ -41,14 +43,21 @@ export default function ProjectsStep({ register, errors, control, watch }: Proje
     setUploading((prev) => new Set(prev).add(index))
     try {
       const url = await uploadToCloudinary(file, "presssence/projects")
-      control._formValues.projects[index].coverImage = url
+      setValue(`projects.${index}.coverImage`, url, { shouldDirty: true })
       setUploadedImages((prev) => ({ ...prev, [index]: url }))
-    } catch (error) {
-      console.error("Upload error:", error)
+    } catch {
+      toast.error("Image upload failed. Use a JPEG, PNG, WebP or GIF under 5 MB.")
     } finally {
       setUploading((prev) => { const next = new Set(prev); next.delete(index); return next })
     }
   }
+
+  // A failed submit can point at a collapsed project; open it so the error is visible.
+  useEffect(() => {
+    if (!Array.isArray(errors.projects)) return
+    const firstInvalid = errors.projects.findIndex(Boolean)
+    if (firstInvalid !== -1) setExpandedIndex(firstInvalid)
+  }, [errors.projects])
 
   const handleAdd = () => {
     append({ title: "", description: "", link: "", timeline: "" })
@@ -75,7 +84,7 @@ export default function ProjectsStep({ register, errors, control, watch }: Proje
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
           {fields.length === 0
-            ? "Add at least one project"
+            ? "Optional: you can add projects later from your portfolio"
             : `${fields.length} project${fields.length > 1 ? "s" : ""} added`}
         </p>
         {fields.length > 0 && (

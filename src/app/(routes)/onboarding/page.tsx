@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, FieldErrors } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { formSchema, FormData } from "@/lib/validations"
@@ -41,6 +41,20 @@ const STEP_TITLES = [
   "Connect your socials",
 ]
 
+/** Fields validated before leaving each step. Index matches STEPS. */
+const STEP_FIELDS: (keyof FormData)[][] = [
+  ["username", "fullName"],
+  ["profession", "headline"],
+  ["theme"],
+  ["projects"],
+  ["socialLinks"],
+]
+
+function firstStepWithError(errors: FieldErrors<FormData>): number {
+  const index = STEP_FIELDS.findIndex((fields) => fields.some((f) => errors[f]))
+  return index === -1 ? 1 : index + 1
+}
+
 /** Roles from a resume, held until the portfolio row exists to attach them to. */
 type PendingRole = {
   company: string
@@ -62,6 +76,8 @@ export default function OnboardingForm() {
     register,
     handleSubmit,
     setValue,
+    setError,
+    trigger,
     watch,
     control,
     formState: { errors },
@@ -72,6 +88,7 @@ export default function OnboardingForm() {
       blogEnabled: false,
       analyticsEnabled: false,
       features: [],
+      headline: "",
       projects: [{ title: "", description: "", link: "", timeline: "" }],
       socialLinks: {
         twitter: "",
@@ -90,6 +107,43 @@ export default function OnboardingForm() {
     },
   })
 
+  const [checkingUsername, setCheckingUsername] = useState(false)
+
+  /** Server-side availability check; the field validation only covers format. */
+  const ensureUsernameAvailable = async (username: string): Promise<boolean> => {
+    setCheckingUsername(true)
+    try {
+      const res = await fetch("/api/checkUsername", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      })
+      const data = await res.json()
+      if (res.ok && data.available) return true
+      setError("username", { message: data.reason ?? "That username is already taken" })
+      return false
+    } catch {
+      toast.error("Couldn't check that username. Check your connection and try again.")
+      return false
+    } finally {
+      setCheckingUsername(false)
+    }
+  }
+
+  const goNext = async () => {
+    const valid = await trigger(STEP_FIELDS[step - 1], { shouldFocus: true })
+    if (!valid) return
+    if (step === 1 && !(await ensureUsernameAvailable(watch("username")))) return
+    setStep((s) => Math.min(s + 1, STEPS.length))
+  }
+
+  const goBack = () => setStep((s) => Math.max(s - 1, 1))
+
+  const onInvalid = (formErrors: FieldErrors<FormData>) => {
+    setStep(firstStepWithError(formErrors))
+    toast.error("A few details need fixing before we can publish.")
+  }
+
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true)
@@ -98,17 +152,32 @@ export default function OnboardingForm() {
           ([, value]) => value && (value as string).trim() !== ""
         )
       )
+      const projects = data.projects
+        .filter((p) => p.title.trim())
+        .map((p) => ({ ...p, title: p.title.trim() }))
+
       const res = await fetch("/api/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
+          projects,
           socialLinks: filteredSocialLinks,
           features: selectedFeatures,
         }),
       })
       if (!res.ok) {
-        toast.error("Failed to create portfolio. Please try again.")
+        const body = await res.json().catch(() => ({}))
+        if (res.status === 409 && body.username) {
+          // Already onboarded (e.g. a second tab); send them to what they have.
+          router.replace(`/${body.username}`)
+          return
+        }
+        if (res.status === 409) {
+          setError("username", { message: body.message ?? "That username is already taken" })
+          setStep(1)
+        }
+        toast.error(body.message ?? "Failed to create portfolio. Please try again.")
         return
       }
 
@@ -129,8 +198,8 @@ export default function OnboardingForm() {
         }
       }
 
-      toast.success("Portfolio created!")
-      router.push(`/${data.username}`)
+      toast.success("Your portfolio is live!")
+      router.replace(`/${data.username}`)
     } catch {
       toast.error("Something went wrong. Please try again.")
     } finally {
@@ -182,6 +251,7 @@ export default function OnboardingForm() {
       watch={watch}
       register={register}
       errors={errors}
+      setValue={setValue}
     />,
     <SocialMediaStep key="social" register={register} watch={watch} />,
   ]
@@ -240,7 +310,20 @@ export default function OnboardingForm() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form
+            onSubmit={handleSubmit(onSubmit, onInvalid)}
+            // Enter in a single-line input would otherwise submit the whole
+            // form from step 1. Fields that use Enter (skills) handle it first.
+            onKeyDown={(e) => {
+              const target = e.target as HTMLElement
+              if (e.key === "Enter" && target.tagName === "INPUT" && !e.defaultPrevented) {
+                e.preventDefault()
+                if (step < totalSteps) goNext()
+              }
+            }}
+            noValidate
+            className="space-y-5"
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -256,8 +339,10 @@ export default function OnboardingForm() {
             <StepNavigation
               currentStep={step}
               totalSteps={totalSteps}
-              setStep={setStep}
+              onNext={goNext}
+              onBack={goBack}
               isLoading={isLoading}
+              isValidating={checkingUsername}
             />
           </form>
         </div>

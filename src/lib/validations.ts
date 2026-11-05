@@ -23,6 +23,23 @@ export async function parseBody<T>(
   return { data: result.data }
 }
 
+/** Top-level paths the app owns; a portfolio with one of these names would be unreachable. */
+export const RESERVED_USERNAMES = new Set([
+  "api", "auth", "onboarding", "login", "signup", "register", "logout", "settings",
+  "dashboard", "account", "admin", "blog", "about", "pricing", "help", "support",
+  "terms", "privacy", "static", "public", "assets", "_next", "favicon", "robots",
+  "sitemap", "presssence", "www", "app",
+])
+
+export const UsernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3, "Username must be at least 3 characters")
+  .max(20, "Username must be 20 characters or fewer")
+  .regex(/^[a-z0-9_]+$/, "Use only lowercase letters, numbers, and underscores")
+  .refine((u) => !RESERVED_USERNAMES.has(u), "That username is reserved")
+
 export const SocialLinksSchema = z.object({
   twitter: z.string().optional(),
   linkedin: z.string().optional(),
@@ -61,25 +78,29 @@ export type FormFields = z.infer<typeof SignupSchemaFrontend>
 export type LoginFields = z.infer<typeof LoginSchemaFrontend>
 
 export const formSchema = z.object({
-  username: z
-    .string()
-    .min(3)
-    .max(20)
-    .regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers, and underscores")
-    .toLowerCase(),
-  fullName: z.string().min(2).max(50),
-  profession: z.string().min(2).max(50),
-  headline: z.string().max(160),
+  username: UsernameSchema,
+  fullName: z.string().trim().min(2, "Enter your name").max(50),
+  profession: z.string().trim().min(2, "Tell people what you do").max(50),
+  headline: z.string().max(160, "Keep it under 160 characters").optional().default(""),
   theme: z.enum(["modern", "creative", "professional", "bold"]).default("modern"),
   features: z.any(),
+  // Projects are optional: a row left completely blank is dropped on submit,
+  // but a row with any content needs a title.
   projects: z.array(
-    z.object({
-      title: z.string().min(3).max(50),
-      description: z.string().max(500),
-      link: z.string().url("Enter a valid URL").optional(),
-      timeline: z.string(),
-      coverImage: z.string().optional(),
-    })
+    z
+      .object({
+        title: z.string().max(100),
+        description: z.string().max(500).optional().default(""),
+        link: z.string().url("Enter a valid URL, including https://").optional().or(z.literal("")),
+        timeline: z.string().optional().default(""),
+        coverImage: z.string().optional(),
+      })
+      .superRefine((p, ctx) => {
+        const hasContent = Boolean(p.description?.trim() || p.link?.trim() || p.timeline || p.coverImage)
+        if (hasContent && !p.title.trim()) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["title"], message: "Give this project a title" })
+        }
+      })
   ),
   socialLinks: SocialLinksSchema,
   blogEnabled: z.boolean(),
@@ -89,11 +110,7 @@ export const formSchema = z.object({
 export type FormData = z.infer<typeof formSchema>
 
 export const CreatePortfolioSchema = z.object({
-  username: z
-    .string()
-    .min(3)
-    .max(20)
-    .regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers, and underscores"),
+  username: UsernameSchema,
   fullName: z.string().min(1).max(50),
   profession: z.string().min(1).max(50),
   headline: z.string().max(160).optional().default(""),
@@ -187,9 +204,5 @@ export const UpdateUserPhotoSchema = z.object({
 })
 
 export const CheckUsernameSchema = z.object({
-  username: z
-    .string()
-    .min(3)
-    .max(20)
-    .regex(/^[a-z0-9_]+$/, "Username can only contain lowercase letters, numbers, and underscores"),
+  username: z.string(),
 })

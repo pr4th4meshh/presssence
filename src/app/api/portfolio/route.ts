@@ -26,7 +26,15 @@ export async function POST(req: Request) {
     })
 
     if (existingPortfolio) {
-      return NextResponse.json({ message: "You already have a portfolio" }, { status: 400 })
+      return NextResponse.json(
+        { message: "You already have a portfolio", username: existingPortfolio.username },
+        { status: 409 }
+      )
+    }
+
+    const usernameTaken = await prisma.portfolio.findUnique({ where: { username } })
+    if (usernameTaken) {
+      return NextResponse.json({ message: "That username is already taken" }, { status: 409 })
     }
 
     const filteredSocialLinks = Object.fromEntries(
