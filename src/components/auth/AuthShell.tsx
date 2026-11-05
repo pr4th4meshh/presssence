@@ -4,13 +4,15 @@ interface AuthShellProps {
   title: string
   subtitle: string
   children: React.ReactNode
-  /** Right-hand panel on large screens. Hidden on small ones. */
-  aside: React.ReactNode
+  /** Right-hand panel on large screens. Hidden on small ones. Leave out for a single column. */
+  aside?: React.ReactNode
 }
 
 export default function AuthShell({ title, subtitle, children, aside }: AuthShellProps) {
   return (
-    <div className="min-h-screen bg-[#f5f5f5] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+    <div
+      className={`min-h-screen bg-[#f5f5f5] ${aside ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]" : ""}`}
+    >
       <div className="flex min-h-screen flex-col px-6 py-8 sm:px-12 lg:px-16">
         <Link
           href="/"
@@ -30,11 +32,13 @@ export default function AuthShell({ title, subtitle, children, aside }: AuthShel
         </main>
       </div>
 
-      <aside className="hidden p-3 lg:block">
-        <div className="sticky top-3 flex h-[calc(100vh-1.5rem)] flex-col items-center justify-center rounded-[28px] border border-neutral-200/80 bg-white px-10">
-          {aside}
-        </div>
-      </aside>
+      {aside && (
+        <aside className="hidden p-3 lg:block">
+          <div className="sticky top-3 flex h-[calc(100vh-1.5rem)] flex-col items-center justify-center rounded-[28px] border border-neutral-200/80 bg-white px-10">
+            {aside}
+          </div>
+        </aside>
+      )}
     </div>
   )
 }

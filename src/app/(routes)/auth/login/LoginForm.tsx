@@ -28,9 +28,12 @@ const OAUTH_ERRORS: Record<string, string> = {
 export default function LoginForm({
   callbackUrl,
   oauthError,
+  passwordReset = false,
 }: {
   callbackUrl: string
   oauthError: string | null
+  /** Arrived here after changing the password but couldn't be signed in automatically. */
+  passwordReset?: boolean
 }) {
   const [errorMessage, setErrorMessage] = useState(
     oauthError ? OAUTH_ERRORS[oauthError] ?? "Sign-in failed. Try again." : ""
@@ -41,8 +44,12 @@ export default function LoginForm({
   const {
     handleSubmit,
     register,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFields>({ resolver: zodResolver(LoginSchemaFrontend) })
+  const typedEmail = watch("email")?.trim()
+  // Carry the email over so it doesn't need typing twice.
+  const forgotHref = typedEmail ? `/auth/forgot-password?email=${encodeURIComponent(typedEmail)}` : "/auth/forgot-password"
   const pending = isSubmitting || redirecting
 
   const onSubmit = async ({ email, password }: LoginFields) => {
@@ -64,6 +71,11 @@ export default function LoginForm({
 
   return (
     <>
+      {passwordReset && (
+        <p role="status" className="mb-6 rounded-xl bg-green-50 px-3.5 py-2.5 text-sm text-green-800">
+          Your password was changed. Sign in with your new one.
+        </p>
+      )}
       <GoogleButton callbackUrl={callbackUrl} />
       <OrDivider />
 
@@ -87,6 +99,14 @@ export default function LoginForm({
           label="Password"
           autoComplete="current-password"
           error={errors.password?.message}
+          labelAction={
+            <Link
+              href={forgotHref}
+              className="text-sm text-neutral-500 underline-offset-4 hover:text-neutral-900 hover:underline focus-visible:underline focus-visible:outline-none"
+            >
+              Forgot password?
+            </Link>
+          }
           {...register("password")}
         />
         <FormError message={errorMessage} />

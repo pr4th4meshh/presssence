@@ -9,11 +9,11 @@ import LoginForm from "./LoginForm"
 export const metadata: Metadata = { title: "Sign in" }
 
 interface LoginPageProps {
-  searchParams: Promise<{ callbackUrl?: string; error?: string }>
+  searchParams: Promise<{ callbackUrl?: string; error?: string; reset?: string }>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const [{ callbackUrl, error }, demo] = await Promise.all([searchParams, getDemoProfile()])
+  const [{ callbackUrl, error, reset }, demo] = await Promise.all([searchParams, getDemoProfile()])
 
   return (
     <AuthShell
@@ -42,7 +42,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </>
       }
     >
-      <LoginForm callbackUrl={safeCallbackUrl(callbackUrl)} oauthError={error ?? null} />
+      <LoginForm
+        callbackUrl={safeCallbackUrl(callbackUrl)}
+        oauthError={error ?? null}
+        passwordReset={reset === "1"}
+      />
     </AuthShell>
   )
 }

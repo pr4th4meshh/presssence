@@ -38,12 +38,17 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   )
 })
 
-export const PasswordField = forwardRef<HTMLInputElement, Omit<FieldProps, "type">>(
-  function PasswordField({ label, error, hint, id, ...props }, ref) {
+interface PasswordFieldProps extends Omit<FieldProps, "type"> {
+  /** Shown at the end of the label row, e.g. a "Forgot password?" link. */
+  labelAction?: React.ReactNode
+}
+
+export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
+  function PasswordField({ label, error, hint, id, labelAction, ...props }, ref) {
     const [visible, setVisible] = useState(false)
     const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined
     return (
-      <div>
+      <div className="relative">
         <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-neutral-900">
           {label}
         </label>
@@ -68,6 +73,9 @@ export const PasswordField = forwardRef<HTMLInputElement, Omit<FieldProps, "type
           </button>
         </div>
         <FieldMessage id={id} error={error} hint={hint} />
+        {/* Drawn in the label row but placed after the input in the DOM, so Tab
+            goes from the email straight to the password. */}
+        {labelAction && <div className="absolute right-0 top-0 leading-5">{labelAction}</div>}
       </div>
     )
   }

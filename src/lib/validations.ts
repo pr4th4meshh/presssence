@@ -68,14 +68,24 @@ export const ProjectInputSchema = z.object({
   coverImage: z.string().nullish().transform((v) => v ?? ""),
 })
 
+export const NewPasswordSchema = z
+  .string()
+  .min(8, "Use at least 8 characters")
+  .max(72, "Use 72 characters or fewer") // bcrypt ignores bytes past 72
+
 export const SignupSchemaFrontend = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address"),
   name: z.string().trim().min(2, "Enter your name").max(50),
-  password: z
-    .string()
-    .min(8, "Use at least 8 characters")
-    .max(72, "Use 72 characters or fewer"), // bcrypt ignores bytes past 72
+  password: NewPasswordSchema,
 })
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().trim().email("Enter a valid email address"),
+})
+
+export const ResetPasswordSchema = z
+  .object({ password: NewPasswordSchema, confirm: z.string() })
+  .refine((v) => v.password === v.confirm, { path: ["confirm"], message: "The passwords don't match" })
 
 export const LoginSchemaFrontend = z.object({
   email: z.string().trim().email("Enter a valid email address"),
@@ -92,6 +102,8 @@ export function safeCallbackUrl(value: string | null | undefined, fallback = "/m
 
 export type FormFields = z.infer<typeof SignupSchemaFrontend>
 export type LoginFields = z.infer<typeof LoginSchemaFrontend>
+export type ForgotPasswordFields = z.infer<typeof ForgotPasswordSchema>
+export type ResetPasswordFields = z.infer<typeof ResetPasswordSchema>
 
 export const formSchema = z.object({
   username: UsernameSchema,
