@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { prisma } from "@/lib/prisma"
 import { Metadata } from "next"
 import ClientPage from "./ClientPage"
@@ -10,50 +11,60 @@ interface PageProps {
   }>
 }
 
-export async function generateMetadata(
-  { params }: PageProps
-): Promise<Metadata> {
+// cache() dedupes this per request, so generateMetadata and Page share one DB query.
+const getPortfolio = cache((username: string) =>
+  prisma.portfolio.findFirst({
+    where: { username },
+    include: {
+      User: { select: { image: true } },
+      projects: { orderBy: { position: "asc" } },
+      workExperiences: { orderBy: { position: "asc" } },
+      photos: true,
+      blogPosts: true,
+      socialMedia: {
+        select: {
+          twitter: true,
+          linkedin: true,
+          github: true,
+          instagram: true,
+          youtube: true,
+          medium: true,
+          website: true,
+          behance: true,
+          figma: true,
+          awwwards: true,
+          dribbble: true,
+          spotify: true,
+          order: true,
+        },
+      },
+    },
+  })
+)
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { portfolioUsername } = await params
+  const fallback: Metadata = {
+    title: `${portfolioUsername} | Presssence`,
+    description: `View ${portfolioUsername}'s portfolio on Presssence.`,
+  }
 
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+    const portfolio = await getPortfolio(portfolioUsername)
+    if (!portfolio) return fallback
 
-    const res = await fetch(
-      `${baseUrl}/api/portfolio/get-user-id?portfolioUsername=${portfolioUsername}`,
-      { cache: "no-store" }
-    )
-
-    if (!res.ok) {
-      return {
-        title: `${portfolioUsername} | Presssence`,
-        description: `View ${portfolioUsername}'s portfolio on Presssence.`,
-      }
-    }
-
-    const userId = await res.json()
-
-    const userRes = await fetch(
-      `${baseUrl}/api/user?username=${userId}`,
-      { cache: "no-store" }
-    )
-
-    if (!userRes.ok) {
-      return {
-        title: `${portfolioUsername} | Presssence`,
-        description: `View ${portfolioUsername}'s portfolio on Presssence.`,
-      }
-    }
-
-    const userData = await userRes.json()
-    const name = userData?.name || portfolioUsername
-    const image = userData?.image || undefined
+    const name = portfolio.fullName || portfolioUsername
+    const image = portfolio.User?.image || undefined
+    const description =
+      portfolio.headline?.trim() ||
+      `${name}${portfolio.profession ? `, ${portfolio.profession}` : ""}. Projects, skills, and more on Presssence.`
 
     return {
       title: `${name} | Presssence`,
-      description: `Check out ${name}'s portfolio on Presssence — projects, skills, and more.`,
+      description,
       openGraph: {
         title: `${name}'s Portfolio`,
-        description: `Check out ${name}'s portfolio on Presssence.`,
+        description,
         type: "profile",
         images: image ? [{ url: image, width: 400, height: 400, alt: `${name}'s profile photo` }] : [],
         siteName: "Presssence",
@@ -61,7 +72,7 @@ export async function generateMetadata(
       twitter: {
         card: "summary",
         title: `${name}'s Portfolio`,
-        description: `Check out ${name}'s portfolio on Presssence.`,
+        description,
         images: image ? [image] : [],
       },
       icons: {
@@ -69,10 +80,7 @@ export async function generateMetadata(
       },
     }
   } catch {
-    return {
-      title: `${portfolioUsername} | Presssence`,
-      description: `View ${portfolioUsername}'s portfolio on Presssence.`,
-    }
+    return fallback
   }
 }
 
@@ -80,37 +88,11 @@ export default async function Page({ params }: PageProps) {
   const { portfolioUsername } = await params
 
   try {
-    const portfolio = await prisma.portfolio.findFirst({
-      where: { username: portfolioUsername },
-      include: {
-        User: { select: { image: true } },
-        projects: { orderBy: { position: "asc" } },
-        workExperiences: { orderBy: { position: "asc" } },
-        photos: true,
-        blogPosts: true,
-        socialMedia: {
-          select: {
-            twitter: true,
-            linkedin: true,
-            github: true,
-            instagram: true,
-            youtube: true,
-            medium: true,
-            website: true,
-            behance: true,
-            figma: true,
-            awwwards: true,
-            dribbble: true,
-            spotify: true,
-            order: true,
-          },
-        },
-      },
-    })
+    const portfolio = await getPortfolio(portfolioUsername)
 
     if (!portfolio) return <NoPortfolioScreen />
 
-    const blogOrder: string[] = (portfolio as any).blogPostOrder ?? []
+    const blogOrder = portfolio.blogPostOrder ?? []
     const sortedBlogPosts = blogOrder.length > 0
       ? [
           ...blogOrder.map((id) => portfolio.blogPosts.find((p) => p.id === id)).filter(Boolean),
