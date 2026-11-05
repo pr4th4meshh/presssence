@@ -18,9 +18,12 @@ const PageHeader = ({ isOwner = false }: { isOwner?: boolean }) => {
         {status === "authenticated" && session?.user && (
           <div className="flex items-center gap-4 text-sm">
             {isOwner ? (
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                You&apos;re viewing your portfolio
-              </span>
+              <Link
+                href="/settings"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Settings
+              </Link>
             ) : (
               <Link
                 href="/me"
