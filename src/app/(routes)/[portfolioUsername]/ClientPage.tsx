@@ -126,7 +126,7 @@ export default function ClientPage({ initialData }: { initialData: ProfileData }
             projects={profileData.projects}
             currentTheme={theme}
             onThemeChange={handleThemeChange}
-            onUpdate={(type: AddItemType, newData: any) => {
+            onUpdate={(type: AddItemType, newData: unknown) => {
               setProfileData((prev) => ({
                 ...prev,
                 [type === "social" ? "socialMedia" : type === "feature" ? "features" : "projects"]: newData,
