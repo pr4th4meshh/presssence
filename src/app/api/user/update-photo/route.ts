@@ -16,13 +16,13 @@ export async function POST(req: Request) {
 
     const { photoUrl } = parsed.data
 
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
       where: { id: session.user.id },
       data: { image: photoUrl },
     })
 
-    session.user.image = photoUrl
-    return NextResponse.json({ user: updatedUser, image: photoUrl })
+    // Return only the new URL; the full row includes the password hash.
+    return NextResponse.json({ image: photoUrl })
   } catch (error) {
     console.error("Error updating user photo:", error)
     return NextResponse.json({ error: "Error updating user photo" }, { status: 500 })
