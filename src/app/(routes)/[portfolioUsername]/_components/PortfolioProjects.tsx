@@ -1,3 +1,4 @@
+import { openAddDialog } from "./addDialogEvents"
 import React, { useState, useEffect, useRef } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
@@ -376,6 +377,22 @@ const PortfolioProjects = ({
             )}
           </Droppable>
         </DragDropContext>
+      </div>
+    ) : isOwner ? (
+      <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
+        <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400 mb-4">
+          Projects
+        </h2>
+        <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+          <p className="text-sm text-muted-foreground">Show visitors what you have built.</p>
+          <button
+            type="button"
+            onClick={() => openAddDialog("project")}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+          >
+            + Add a project
+          </button>
+        </div>
       </div>
     ) : null
   )

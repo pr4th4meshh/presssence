@@ -1,4 +1,5 @@
 "use client"
+import { openAddDialog } from "./addDialogEvents"
 
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
@@ -262,6 +263,22 @@ const PortfolioSkills = ({
             )}
           </Droppable>
         </DragDropContext>
+      </div>
+    ) : isOwner ? (
+      <div className="section-border py-10 border-t dark:border-neutral-800 border-gray-100">
+        <h2 className="section-label text-xs font-semibold uppercase tracking-widest dark:text-neutral-500 text-gray-400 mb-4">
+          Skills &amp; Technologies
+        </h2>
+        <div className="flex flex-col items-center justify-center gap-3 py-8 text-center">
+          <p className="text-sm text-muted-foreground">List the tools and technologies you work with.</p>
+          <button
+            type="button"
+            onClick={() => openAddDialog("feature")}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+          >
+            + Add skills
+          </button>
+        </div>
       </div>
     ) : null
   )

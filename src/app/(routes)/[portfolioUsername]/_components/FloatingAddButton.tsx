@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { AtSign, Zap, FolderOpen, Check, X, Palette } from "lucide-react"
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import SharePresssenceButton from "./SharePresssenceButton"
-import LogoutButton from "@/components/LogoutButton"
+import { onOpenAddDialog } from "./addDialogEvents"
 
 type AddItemType = "social" | "feature" | "project"
 
@@ -223,6 +223,8 @@ const FloatingAddButton = ({
       tooltip: "Add Project",
     },
   ]
+
+  useEffect(() => onOpenAddDialog((type) => setAddType(type)), [])
 
   const handleDockClick = (type: AddItemType) => {
     if (addType === type) {
@@ -468,7 +470,8 @@ const FloatingAddButton = ({
               className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 group bg-muted text-foreground"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              title="Change Theme"
+              title="Change theme"
+              aria-label="Change theme"
             >
               <Palette size={18} className="group-hover:scale-110 transition-transform duration-200" />
             </motion.button>
@@ -490,6 +493,7 @@ const FloatingAddButton = ({
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                   title={item.tooltip}
+                  aria-label={item.tooltip}
                 >
                   {isActive ? (
                     <X size={18} />
@@ -502,10 +506,6 @@ const FloatingAddButton = ({
                 </motion.button>
               )
             })}
-            <LogoutButton
-              iconOnly
-              className="w-12 h-12 rounded-xl"
-            />
           </div>
         </motion.div>
       </div>
