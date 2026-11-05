@@ -45,7 +45,7 @@ const getPortfolio = cache((username: string) =>
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { portfolioUsername } = await params
   const fallback: Metadata = {
-    title: `${portfolioUsername} | Presssence`,
+    title: portfolioUsername,
     description: `View ${portfolioUsername}'s portfolio on Presssence.`,
   }
 
@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       `${name}${portfolio.profession ? `, ${portfolio.profession}` : ""}. Projects, skills, and more on Presssence.`
 
     return {
-      title: `${name} | Presssence`,
+      title: name,
       description,
       openGraph: {
         title: `${name}'s Portfolio`,
