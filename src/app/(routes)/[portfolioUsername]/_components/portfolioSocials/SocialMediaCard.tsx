@@ -34,6 +34,43 @@ const formatFollowers = (n: number) => {
   return n.toString()
 }
 
+/**
+ * The handle as it appears in the link, so the card never depends on a
+ * profile lookup succeeding. Websites show their domain instead.
+ */
+export function handleFromUrl(platform: string, url: string): string | null {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return null
+  }
+  const host = parsed.hostname.replace(/^www\./, "")
+  if (platform === "website") return host + (parsed.pathname.length > 1 ? parsed.pathname.replace(/\/$/, "") : "")
+
+  const parts = parsed.pathname.split("/").filter(Boolean).map((p) => decodeURIComponent(p))
+  const clean = (value: string | undefined) => (value ? value.replace(/^@/, "") || null : null)
+
+  switch (platform) {
+    case "linkedin":
+      // linkedin.com/in/name, linkedin.com/company/name
+      return clean(parts[0] === "in" || parts[0] === "company" ? parts[1] : parts[0])
+    case "youtube":
+      // youtube.com/@name, youtube.com/c/name, youtube.com/user/name
+      return clean(["c", "user"].includes(parts[0]) ? parts[1] : parts[0]?.startsWith("@") ? parts[0] : undefined)
+    case "medium":
+      // medium.com/@name or name.medium.com
+      if (host.endsWith(".medium.com")) return host.replace(".medium.com", "")
+      return clean(parts[0])
+    case "spotify":
+      // Spotify user ids are random strings; the looked-up display name reads better.
+      return null
+    default:
+      // github.com/name, x.com/name, instagram.com/name, dribbble.com/name, figma.com/@name, ...
+      return clean(parts[0])
+  }
+}
+
 const SocialMediaCard: React.FC<SocialMediaCardProps> = ({ url, icon: Icon, metadata, platform, label }) => {
   const username = metadata?.username
   const profile = metadata?.[platform] as SocialProfile | undefined
@@ -41,7 +78,8 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({ url, icon: Icon, meta
   const followers = profile?.followers
   const bio = profile?.bio
 
-  const handle = username || displayName
+  const urlHandle = handleFromUrl(platform, url)
+  const handle = platform === "website" ? urlHandle : urlHandle || username || displayName
 
   return (
     <Link
@@ -60,7 +98,7 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({ url, icon: Icon, meta
         </p>
         {handle && (
           <p className="project-card-title text-sm font-semibold text-foreground truncate leading-snug">
-            @{handle}
+            {platform === "website" ? handle : `@${handle}`}
           </p>
         )}
         {typeof followers === "number" && (
