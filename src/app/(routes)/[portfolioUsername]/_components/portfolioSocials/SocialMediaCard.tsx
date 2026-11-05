@@ -21,6 +21,8 @@ interface Metadata {
 
 interface SocialMediaCardProps {
   platform: string
+  /** Display name, e.g. "GitHub". Falls back to the platform id. */
+  label?: string
   url: string
   icon: React.ElementType
   metadata?: Metadata
@@ -32,7 +34,7 @@ const formatFollowers = (n: number) => {
   return n.toString()
 }
 
-const SocialMediaCard: React.FC<SocialMediaCardProps> = ({ url, icon: Icon, metadata, platform }) => {
+const SocialMediaCard: React.FC<SocialMediaCardProps> = ({ url, icon: Icon, metadata, platform, label }) => {
   const username = metadata?.username
   const profile = metadata?.[platform] as SocialProfile | undefined
   const displayName = profile?.displayName
@@ -53,8 +55,8 @@ const SocialMediaCard: React.FC<SocialMediaCardProps> = ({ url, icon: Icon, meta
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="section-label text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-0.5 capitalize">
-          {platform}
+        <p className="section-label text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">
+          {label ?? platform}
         </p>
         {handle && (
           <p className="project-card-title text-sm font-semibold text-foreground truncate leading-snug">

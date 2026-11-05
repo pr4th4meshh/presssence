@@ -4,28 +4,18 @@ import React, { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
 import { FaExternalLinkAlt } from "react-icons/fa"
-import { FiPlus, FiTrash2 } from "react-icons/fi"
+import { Pencil, X } from "lucide-react"
 import { toast } from "sonner"
 import SocialMediaCard from "./portfolioSocials/SocialMediaCard"
 import { socialIcons } from "./portfolioSocials/SocialMediaIcons"
-import { Button } from "@/components/ui/button"
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
 import { getUsernameFromUrl } from "@/utils/getUsernameFromUrl"
 import { getSpotifyUserIdFromUrl } from "@/utils/getSpotifyUserIdFromUrl"
-
-interface SocialLinks {
-  [platform: string]: string
-}
-
-interface SocialMediaData {
-  links: SocialLinks
-  order: string[]
-}
+import { openAddDialog } from "./addDialogEvents"
+import SocialForm from "./addDialogs/SocialForm"
+import { readSocials, updateSocials, type SocialState } from "./addDialogs/api"
+import { platformLabel } from "./addDialogs/platforms"
 
 interface SocialProfile {
   displayName?: string
@@ -56,276 +46,210 @@ interface PortfolioSocialsProps {
   }
 }
 
-const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
-  socialMediaLinksViaPortfolio,
-}) => {
-  const [isEditing, setIsEditing] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [socialMediaDataViaExternalApi, setSocialMediaDataViaExternalApi] =
-    useState<SocialMetadata[]>([])
-  const [socialMediaData, setSocialMediaData] = useState<SocialMediaData>(() => {
-    const rawLinks = socialMediaLinksViaPortfolio?.socialMedia || {}
-    const links: SocialLinks = {}
-    for (const [platform, url] of Object.entries(rawLinks)) {
-      if (
-        typeof url === "string" &&
-        url.trim() &&
-        !/^https?:\/\/localhost(:\d+)?/i.test(url)
-      ) {
-        links[platform] = url.trim()
-      }
-    }
-    const orderArray = (
-      rawLinks.order && Array.isArray(rawLinks.order) ? rawLinks.order : []
-    ) as string[]
-    const order = orderArray.filter((p: string) => links[p]) || Object.keys(links)
-    return { links, order }
-  })
+const isLocalhost = (url: string) => /^https?:\/\/localhost(:\d+)?/i.test(url)
+
+/** Saved links minus leftovers from local testing. */
+function visibleSocials(raw: Record<string, unknown> | undefined): SocialState {
+  const { links, order } = readSocials(raw)
+  for (const [platform, url] of Object.entries(links)) if (isLocalhost(url)) delete links[platform]
+  return { links, order: order.filter((p) => links[p]) }
+}
+
+const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({ socialMediaLinksViaPortfolio }) => {
+  const [socials, setSocials] = useState<SocialState>(() => visibleSocials(socialMediaLinksViaPortfolio?.socialMedia))
+  const [editing, setEditing] = useState<{ platform: string; url: string } | null>(null)
+  const [metadataList, setMetadataList] = useState<SocialMetadata[]>([])
 
   const { data: session } = useSession()
-  const params = useParams()
+  const params = useParams<{ portfolioUsername: string }>()
+  const username = params.portfolioUsername
   const isOwner = session?.user?.id === socialMediaLinksViaPortfolio?.userId
 
-  // Re-sync local state when parent refetches (e.g. after adding via FloatingAddButton)
+  // Re-sync when the page refetches (e.g. after adding from the toolbar).
   useEffect(() => {
-    if (isEditing) return
-    const rawLinks = socialMediaLinksViaPortfolio?.socialMedia || {}
-    const links: SocialLinks = {}
-    for (const [platform, url] of Object.entries(rawLinks)) {
-      if (typeof url === "string" && url.trim() && !/^https?:\/\/localhost(:\d+)?/i.test(url)) {
-        links[platform] = url.trim()
-      }
-    }
-    const orderArray = (rawLinks.order && Array.isArray(rawLinks.order) ? rawLinks.order : []) as string[]
-    const order = orderArray.filter((p: string) => links[p]).length
-      ? orderArray.filter((p: string) => links[p])
-      : Object.keys(links)
-    setSocialMediaData({ links, order })
+    setSocials(visibleSocials(socialMediaLinksViaPortfolio?.socialMedia))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(socialMediaLinksViaPortfolio?.socialMedia)])
 
-  const fetchSocialMetadata = async (platform: string, username: string, spotifyUserId: string) => {
-    try {
-      const res = await fetch(
-        `/api/socialMediaInfo?platform=${encodeURIComponent(platform)}&username=${encodeURIComponent(username || "")}&spotifyUserId=${encodeURIComponent(spotifyUserId || "")}`
-      )
-      if (res.ok) {
-        const metadata = await res.json()
-        setSocialMediaDataViaExternalApi((prev) => {
-          const exists = prev.some((item) => item.platform === platform && item.username === username)
-          return exists ? prev : [...prev, { platform, username, ...metadata }]
-        })
-      }
-    } catch {}
-  }
-
+  // Profile details (handle, followers) for the cards.
   useEffect(() => {
-    if (socialMediaData.links) {
-      for (const [platform, url] of Object.entries(socialMediaData.links)) {
-        if (typeof url === "string" && url.trim()) {
-          const username = getUsernameFromUrl(platform, url)
-          const spotifyUserId = getSpotifyUserIdFromUrl(url)
-          if (username || spotifyUserId) {
-            fetchSocialMetadata(platform, username as string, spotifyUserId as string)
-          }
-        }
-      }
-    }
-  }, [socialMediaData.links])
-
-  const handleInputChange = (platform: string, value: string) => {
-    setSocialMediaData((prev) => ({
-      ...prev,
-      links: { ...prev.links, [platform]: value },
-    }))
-    const username = getUsernameFromUrl(platform, value)
-    const spotifyUserId = getSpotifyUserIdFromUrl(value)
-    if (username || spotifyUserId) {
-      fetchSocialMetadata(platform, username || "", spotifyUserId || "")
-    }
-  }
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    const filteredOrder = socialMediaData.order.filter((p) => socialMediaData.links[p]?.trim())
-    const filteredLinks: Record<string, string> = {}
-    for (const [platform, url] of Object.entries(socialMediaData.links)) {
-      if (typeof url === "string" && url.trim()) filteredLinks[platform] = url.trim()
-    }
-    try {
-      const res = await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ socialLinks: filteredLinks, socialLinksOrder: filteredOrder }),
-      })
-      if (res.ok) {
-        setIsEditing(false)
-        toast.success("Social links updated")
-      } else {
-        const data = await res.json()
-        toast.error(data.message || "Failed to update social links")
-      }
-    } catch {
-      toast.error("An error occurred while updating social links")
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleDeleteSocial = async (platform: string) => {
-    const updatedLinks = { ...socialMediaData.links }
-    delete updatedLinks[platform]
-    const updatedOrder = socialMediaData.order.filter((p) => p !== platform)
-    setSocialMediaData({ links: updatedLinks, order: updatedOrder })
-    try {
-      await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ socialLinks: updatedLinks, socialLinksOrder: updatedOrder }),
-      })
-      toast.success(`${platform} removed`)
-    } catch {
-      toast.error("Failed to remove social link")
-    }
-  }
-
-  const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) return
-    const items = [...socialMediaArray]
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
-    const newOrder = items.map((item) => item.platform)
-    setSocialMediaData((prev) => ({ links: prev.links, order: newOrder }))
-    if (isOwner) {
-      try {
-        await fetch(`/api/portfolio?portfolioUsername=${params.portfolioUsername}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ socialLinks: socialMediaData.links, socialLinksOrder: newOrder }),
+    for (const [platform, url] of Object.entries(socials.links)) {
+      const handle = getUsernameFromUrl(platform, url)
+      const spotifyUserId = getSpotifyUserIdFromUrl(url)
+      if (!handle && !spotifyUserId) continue
+      if (metadataList.some((m) => m.platform === platform && m.username === handle)) continue
+      fetch(
+        `/api/socialMediaInfo?platform=${encodeURIComponent(platform)}&username=${encodeURIComponent(handle || "")}&spotifyUserId=${encodeURIComponent(spotifyUserId || "")}`
+      )
+        .then((res) => (res.ok ? res.json() : null))
+        .then((metadata) => {
+          if (!metadata) return
+          setMetadataList((prev) => [
+            ...prev.filter((m) => m.platform !== platform),
+            { platform, username: handle || undefined, ...metadata },
+          ])
         })
-      } catch {}
+        .catch(() => {})
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(socials.links)])
+
+  /**
+   * Shows the change straight away, applies it to the saved links (not this
+   * tab's copy), then shows the result. Rolls back if the save fails.
+   */
+  const apply = async (local: SocialState, change: (current: SocialState) => SocialState, failure: string) => {
+    const previous = socials
+    setSocials(local)
+    try {
+      setSocials(await updateSocials(username, change))
+      return true
+    } catch {
+      setSocials(previous)
+      toast.error(failure)
+      return false
     }
   }
 
-  const socialMediaArray: { platform: string; url: string; id: string }[] = (
-    socialMediaData.order.length > 0
-      ? socialMediaData.order
-      : Object.keys(socialMediaData.links)
-  )
-    .filter((platform) => socialMediaData.links[platform])
-    .map((platform) => ({
-      platform,
-      url: socialMediaData.links[platform],
-      id: `social-${platform}`,
-    }))
+  const without = (state: SocialState, platform: string): SocialState => {
+    const links = { ...state.links }
+    delete links[platform]
+    return { links, order: state.order.filter((p) => p !== platform) }
+  }
 
-  if (!isOwner && socialMediaArray.length === 0) return null
+  const remove = async (platform: string) => {
+    const url = socials.links[platform]
+    const index = socials.order.indexOf(platform)
+    const label = platformLabel(platform)
+    const ok = await apply(without(socials, platform), (current) => without(current, platform), `Couldn't remove ${label}. Try again.`)
+    if (!ok) return
+    toast(`Removed ${label}`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          const restore = (state: SocialState): SocialState => {
+            if (state.links[platform]) return state
+            const order = state.order.filter((p) => p !== platform)
+            order.splice(Math.min(index, order.length), 0, platform)
+            return { links: { ...state.links, [platform]: url }, order }
+          }
+          apply(restore(without(socials, platform)), restore, `Couldn't bring back ${label}.`)
+        },
+      },
+    })
+  }
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination || result.destination.index === result.source.index) return
+    const order = Array.from(socials.order)
+    const [moved] = order.splice(result.source.index, 1)
+    order.splice(result.destination.index, 0, moved)
+    apply(
+      { ...socials, order },
+      (current) => ({
+        links: current.links,
+        order: [...order.filter((p) => current.links[p]), ...current.order.filter((p) => !order.includes(p))],
+      }),
+      "Couldn't save the new order. Try again."
+    )
+  }
+
+  const items = socials.order.map((platform) => ({ platform, url: socials.links[platform] }))
+
+  if (!isOwner && items.length === 0) return null
+
+  const card = (platform: string, url: string) => {
+    const Icon = socialIcons[platform as keyof typeof socialIcons] || FaExternalLinkAlt
+    const metadata = metadataList.find((item) => item.platform === platform)
+    return (
+      <SocialMediaCard
+        platform={platform}
+        label={platformLabel(platform)}
+        url={url}
+        icon={Icon}
+        metadata={{ platform, username: metadata?.username, ...metadata }}
+      />
+    )
+  }
 
   return (
     <div className="section-border py-10 border-t border-border">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-baseline justify-between gap-4">
         <h2 className="section-label text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           Connect
         </h2>
-
-        {isOwner && (
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsEditing(false)}
-                  disabled={isSaving}
-                  className="h-7 px-3 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="h-7 px-3 text-xs"
-                >
-                  {isSaving ? "Saving…" : "Save"}
-                </Button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Edit links
-              </button>
-            )}
+        {isOwner && items.length > 0 && (
+          <div className="flex items-baseline gap-4">
+            {items.length > 1 && <p className="hidden text-xs text-muted-foreground sm:block">Drag to reorder</p>}
+            <button
+              type="button"
+              onClick={() => openAddDialog("social")}
+              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              + Add link
+            </button>
           </div>
         )}
       </div>
 
-      {/* Edit form */}
-      {isEditing && (
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {Object.keys(socialMediaData.links).map((platform) => {
-            const Icon = socialIcons[platform as keyof typeof socialIcons]
-            return (
-              <div key={platform} className="flex items-center gap-2.5 p-3 rounded-xl border border-border bg-muted/30">
-                {Icon && <Icon className="shrink-0 text-base text-muted-foreground" />}
-                <input
-                  type="url"
-                  value={socialMediaData.links[platform] || ""}
-                  onChange={(e) => handleInputChange(platform, e.target.value)}
-                  placeholder={`${platform} URL`}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none min-w-0"
-                />
-              </div>
-            )
-          })}
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-10">
+          <p className="text-center text-sm text-muted-foreground">
+            No links yet. Add your profiles so visitors can find you.
+          </p>
+          <button
+            type="button"
+            onClick={() => openAddDialog("social")}
+            className="rounded-md border border-border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+          >
+            + Add a link
+          </button>
         </div>
-      )}
-
-      {/* Cards */}
-      {socialMediaArray.length > 0 ? (
+      ) : !isOwner ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map(({ platform, url }) => (
+            <div key={platform}>{card(platform, url)}</div>
+          ))}
+        </div>
+      ) : (
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="socials" direction="horizontal">
             {(provided) => (
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
               >
-                {socialMediaArray.map(({ platform, url, id }, index) => {
-                  const Icon = socialIcons[platform as keyof typeof socialIcons] || FaExternalLinkAlt
-                  const metadata = socialMediaDataViaExternalApi.find((item) => item.platform === platform)
+                {items.map(({ platform, url }, index) => {
+                  const label = platformLabel(platform)
                   return (
-                    <Draggable
-                      key={id}
-                      draggableId={id}
-                      index={index}
-                      isDragDisabled={!isOwner}
-                    >
+                    <Draggable key={platform} draggableId={`social-${platform}`} index={index}>
                       {(provided, snapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`relative group/card transition-shadow ${snapshot.isDragging ? "shadow-xl rotate-1 scale-[1.02]" : ""} ${isOwner ? "cursor-grab active:cursor-grabbing" : ""}`}
+                          className={`group/card relative rounded-2xl transition-shadow ${snapshot.isDragging ? "shadow-xl" : ""}`}
                         >
-                          <SocialMediaCard
-                            platform={platform}
-                            url={url}
-                            icon={Icon}
-                            metadata={{ platform, username: metadata?.username, ...metadata }}
-                          />
-                          {isOwner && (
+                          {card(platform, url)}
+                          <div className="absolute right-3 top-1/2 flex -translate-y-1/2 gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover/card:opacity-100 [@media(hover:none)]:opacity-100">
                             <button
-                              onClick={(e) => { e.preventDefault(); handleDeleteSocial(platform) }}
-                              className="absolute top-2 left-2 w-6 h-6 rounded-md bg-destructive text-white backdrop-blur-sm border border-border flex items-center justify-center opacity-0 group-hover/card:opacity-100 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30 transition-all"
-                              title={`Remove ${platform}`}
+                              type="button"
+                              onClick={() => setEditing({ platform, url })}
+                              aria-label={`Edit ${label} link`}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
                             >
-                              <FiTrash2 size={11} />
+                              <Pencil className="h-3.5 w-3.5" />
                             </button>
-                          )}
+                            <button
+                              type="button"
+                              onClick={() => remove(platform)}
+                              aria-label={`Remove ${label}`}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:border-red-300 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       )}
                     </Draggable>
@@ -336,22 +260,28 @@ const PortfolioSocials: React.FC<PortfolioSocialsProps> = ({
             )}
           </Droppable>
         </DragDropContext>
-      ) : isOwner ? (
-        <div className="flex flex-col items-center justify-center py-10 gap-3">
-          <p className="text-sm text-muted-foreground text-center">
-            No social links yet. Add some so visitors can find you.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="gap-1.5 text-xs h-7"
-          >
-            <FiPlus size={12} />
-            Add links
-          </Button>
-        </div>
-      ) : null}
+      )}
+
+      <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="max-w-[460px]">
+          {editing && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Edit {platformLabel(editing.platform)} link</DialogTitle>
+                <DialogDescription>Update where this card points.</DialogDescription>
+              </DialogHeader>
+              <SocialForm
+                key={editing.platform}
+                username={username}
+                initialLinks={socialMediaLinksViaPortfolio?.socialMedia}
+                editing={editing}
+                onSaved={setSocials}
+                onDone={() => setEditing(null)}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

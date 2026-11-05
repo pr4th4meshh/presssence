@@ -167,7 +167,7 @@ const FloatingAddButton = ({
                 <SocialForm
                   username={username}
                   initialLinks={socialMediaLinks}
-                  onSaved={saved("social")}
+                  onSaved={(s) => saved("social")({ ...s.links, order: s.order })}
                   onDone={close}
                 />
               )}
