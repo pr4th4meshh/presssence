@@ -9,7 +9,6 @@ import { useSession } from "next-auth/react"
 import Navbar from "./Navbar"
 import { useEffect, useState } from "react"
 import { BiGlobe } from "react-icons/bi"
-import SignupModal from "./SignupModal"
 import { motion } from "framer-motion"
 import ScrollToDemo from "./ScrollToDemo"
 
@@ -51,10 +50,9 @@ interface HeroProps {
 
 export default function Hero({ demoProfile }: HeroProps) {
   const [user, setUser] = useState<User | null>(null)
-  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false)
   const router = useRouter()
 
-  const words = ["easy", "quick", "great", "modern"]
+  const words = ["quick", "modern", "standout", "beautiful"]
 
   const links = [
     {
@@ -104,15 +102,8 @@ export default function Hero({ demoProfile }: HeroProps) {
   }, [status, clientSession?.user?.id])
 
   const handleCreatePortfolio = () => {
-    if (status === "authenticated") {
-      if (user?.portfolio) {
-        router.push(`/${user.portfolio.username}`)
-      } else {
-        router.push("/onboarding")
-      }
-    } else {
-      setShowSignUpPrompt(true)
-    }
+    // /me resolves to the portfolio or onboarding on the server.
+    router.push(status === "authenticated" ? "/me" : "/auth/signup")
   }
 
   return (
@@ -162,12 +153,12 @@ export default function Hero({ demoProfile }: HeroProps) {
               variants={fadeUp}
               className="text-lg sm:text-xl text-neutral-500 leading-relaxed"
             >
-              Build{" "}
+              Build a{" "}
               <FlipWords
                 words={words}
                 className="text-neutral-800 font-semibold px-0"
-              />{" "}
-              portfolio site in just a few clicks.
+              />
+              portfolio in just a few clicks.
             </motion.div>
 
             {/* URL hint */}
@@ -211,9 +202,6 @@ export default function Hero({ demoProfile }: HeroProps) {
         items={links}
       />
 
-      {showSignUpPrompt && (
-        <SignupModal signUpPromptState={setShowSignUpPrompt} />
-      )}
     </>
   )
 }

@@ -1,13 +1,9 @@
 "use client"
 import React, { useState, useEffect } from "react"
 import { signOut, useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { FiUser } from "react-icons/fi"
-import { Button } from "./ui/button"
 
 const Navbar = () => {
-  const router = useRouter()
   const { data: session, status } = useSession()
   const [scrolled, setScrolled] = useState(false)
 
@@ -41,28 +37,37 @@ const Navbar = () => {
           <div className="w-px h-4 bg-black/10" />
 
           {status === "loading" ? (
-            <div className="w-16 h-7 rounded-full bg-neutral-200 animate-pulse" />
+            <div className="w-24 h-7 rounded-full bg-neutral-200 animate-pulse" />
           ) : session?.user ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-neutral-500">
-                <FiUser className="text-xs opacity-70" />
-                {session.user.name?.split(" ")[0]}
-              </span>
-              <Button
-                variant="destructive"
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="rounded-full h-7 px-3 text-xs"
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Link
+                href="/me"
+                className="rounded-full bg-neutral-900 px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-neutral-700 sm:text-sm"
               >
-                Logout
-              </Button>
+                My portfolio
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900"
+              >
+                Sign out
+              </button>
             </div>
           ) : (
-            <button
-              onClick={() => router.push("/auth/signup")}
-              className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
-            >
-              Sign in
-            </button>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Link
+                href="/auth/login"
+                className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="rounded-full bg-neutral-900 px-3.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-neutral-700 sm:text-sm"
+              >
+                Get started
+              </Link>
+            </div>
           )}
         </div>
       </div>
