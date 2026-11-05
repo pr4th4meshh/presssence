@@ -111,7 +111,7 @@ const EditableProject = ({
 
   if (!isOwner) {
     return (
-      <div className="group">
+      <div className="group h-full">
         <ProjectCard project={project} />
       </div>
     )
@@ -228,7 +228,7 @@ const EditableProject = ({
 
   return (
     <div
-      className="group relative cursor-pointer"
+      className="group relative h-full cursor-pointer"
       onClick={() => setIsEditing(true)}
     >
       <ProjectCard project={project} />
@@ -360,6 +360,7 @@ const PortfolioProjects = ({
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
+                        className="h-full"
                       >
                         <EditableProject
                           project={project}
