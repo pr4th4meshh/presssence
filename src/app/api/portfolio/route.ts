@@ -144,20 +144,19 @@ export async function PUT(req: Request) {
 
     const updateData = parsed.data
 
-    // Every existing project in the payload must belong to this portfolio,
-    // otherwise a caller could overwrite another user's project by id.
-    const existingProjectIds = (updateData.projects ?? [])
-      .map((p) => p.id)
-      .filter((id): id is string => Boolean(id))
-
-    if (existingProjectIds.length > 0) {
-      const ownedCount = await prisma.project.count({
-        where: { id: { in: existingProjectIds }, portfolioId: portfolio.id },
-      })
-      if (ownedCount !== new Set(existingProjectIds).size) {
-        return NextResponse.json({ message: "Forbidden" }, { status: 403 })
-      }
-    }
+    // Only projects that belong to this portfolio can be updated. Ids that
+    // don't (another user's, or one deleted since the client loaded) are
+    // skipped rather than written, so a stale client copy can't fail the save.
+    const ownedProjectIds = new Set(
+      updateData.projects
+        ? (
+            await prisma.project.findMany({
+              where: { portfolioId: portfolio.id },
+              select: { id: true },
+            })
+          ).map((p) => p.id)
+        : []
+    )
 
     await prisma.$transaction(async (tx) => {
       await tx.portfolio.update({
@@ -177,12 +176,13 @@ export async function PUT(req: Request) {
         for (let i = 0; i < updateData.projects.length; i++) {
           const project = updateData.projects[i]
           const position = project.position !== undefined ? project.position : i
+          if (project.id && !ownedProjectIds.has(project.id)) continue
           if (project.id) {
             await tx.project.update({
               where: { id: project.id, portfolioId: portfolio.id },
               data: {
                 title: project.title,
-                description: project.description,
+                description: project.description ?? "",
                 link: project.link || "",
                 timeline: project.timeline || "",
                 coverImage: project.coverImage || "",
@@ -216,9 +216,21 @@ export async function PUT(req: Request) {
           }
         }
 
-        const cleanOrder = (updateData.socialLinksOrder ?? []).filter(
-          (platform) => cleanLinks[platform]
-        )
+        // Callers that only add or change a link don't send an order; keep
+        // the saved one and append any new platforms instead of wiping it.
+        let requestedOrder = updateData.socialLinksOrder
+        if (requestedOrder === undefined) {
+          const existing = await tx.socialLinks.findUnique({
+            where: { portfolioId: portfolio.id },
+            select: { order: true },
+          })
+          const saved = existing?.order ?? []
+          requestedOrder = [
+            ...saved,
+            ...Object.keys(cleanLinks).filter((platform) => !saved.includes(platform)),
+          ]
+        }
+        const cleanOrder = requestedOrder.filter((platform) => cleanLinks[platform])
 
         const socialData: Record<string, string | string[]> = { order: cleanOrder }
         for (const platform of SOCIAL_PLATFORMS) {

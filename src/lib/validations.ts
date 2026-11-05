@@ -40,27 +40,32 @@ export const UsernameSchema = z
   .regex(/^[a-z0-9_]+$/, "Use only lowercase letters, numbers, and underscores")
   .refine((u) => !RESERVED_USERNAMES.has(u), "That username is reserved")
 
+// Unset platforms come back from the database as null, and clients send the
+// object they loaded, so null must be accepted alongside a string.
+const optionalLink = z.string().nullish()
+
 export const SocialLinksSchema = z.object({
-  twitter: z.string().optional(),
-  linkedin: z.string().optional(),
-  github: z.string().optional(),
-  instagram: z.string().optional(),
-  youtube: z.string().optional(),
-  medium: z.string().optional(),
-  website: z.string().optional(),
-  behance: z.string().optional(),
-  figma: z.string().optional(),
-  awwwards: z.string().optional(),
-  dribbble: z.string().optional(),
-  spotify: z.string().optional(),
-}).partial()
+  twitter: optionalLink,
+  linkedin: optionalLink,
+  github: optionalLink,
+  instagram: optionalLink,
+  youtube: optionalLink,
+  medium: optionalLink,
+  website: optionalLink,
+  behance: optionalLink,
+  figma: optionalLink,
+  awwwards: optionalLink,
+  dribbble: optionalLink,
+  spotify: optionalLink,
+})
 
 export const ProjectInputSchema = z.object({
-  title: z.string().min(1).max(100),
-  description: z.string().max(500).default(""),
-  link: z.string().url().optional().or(z.literal("")),
-  timeline: z.string().optional().default(""),
-  coverImage: z.string().optional().default(""),
+  title: z.string().trim().min(1).max(100),
+  description: z.string().max(500).nullish().transform((v) => v ?? ""),
+  // Same as social links: optional columns load as null.
+  link: z.string().url().nullish().or(z.literal("")),
+  timeline: z.string().nullish().transform((v) => v ?? ""),
+  coverImage: z.string().nullish().transform((v) => v ?? ""),
 })
 
 export const SignupSchemaFrontend = z.object({

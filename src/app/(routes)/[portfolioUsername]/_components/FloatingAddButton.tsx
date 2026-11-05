@@ -23,6 +23,12 @@ import { onOpenAddDialog } from "./addDialogEvents"
 
 type AddItemType = "social" | "feature" | "project"
 
+const ITEM_NOUN: Record<AddItemType, string> = {
+  social: "Link",
+  feature: "Skill",
+  project: "Project",
+}
+
 interface IProject {
   title: string
   description: string
@@ -170,12 +176,12 @@ const FloatingAddButton = ({
           coverImage: "",
         })
         setImagePreviewUrl(null)
-        toast.success(`New ${addType} added successfully.`)
+        toast.success(`${ITEM_NOUN[addType]} added`)
         refetchData()
       } else throw new Error("Failed to update")
     } catch (error) {
       console.error(`Error adding ${addType}:`, error)
-      toast.error(`Failed to add new ${addType}.`)
+      toast.error(`Couldn't add that ${ITEM_NOUN[addType].toLowerCase()}. Please try again.`)
     } finally {
       setIsLoading(false)
     }
@@ -343,7 +349,7 @@ const FloatingAddButton = ({
                   />
                 </div>
                 <div>
-                  <Label>Description</Label>
+                  <Label>Description<span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span></Label>
                   <Textarea
                     value={newProject.description}
                     onChange={(e) =>
@@ -354,11 +360,10 @@ const FloatingAddButton = ({
                     }
                     placeholder="Enter project description"
                     rows={3}
-                    required
                   />
                 </div>
                 <div>
-                  <Label>Project Link</Label>
+                  <Label>Project Link<span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span></Label>
                   <Input
                     type="url"
                     value={newProject.link}
@@ -366,11 +371,10 @@ const FloatingAddButton = ({
                       setNewProject({ ...newProject, link: e.target.value })
                     }
                     placeholder="https://project-url.com"
-                    required
                   />
                 </div>
                 <div>
-                  <Label>Timeline</Label>
+                  <Label>Date<span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span></Label>
                   <Input
                     type="date"
                     value={newProject.timeline}
@@ -380,11 +384,10 @@ const FloatingAddButton = ({
                         timeline: e.target.value,
                       })
                     }
-                    required
                   />
                 </div>
                 <div>
-                  <Label>Cover Image</Label>
+                  <Label>Cover Image<span className="ml-1 text-xs font-normal text-muted-foreground">(optional)</span></Label>
                   <div className="relative">
                     <Input
                       type="file"
