@@ -82,9 +82,10 @@ export async function GET(req: Request) {
 
     return new Response(JSON.stringify(responseData), { status: 200 });
 
-  } catch (error: any) {
+  } catch (error) {
+    console.error("Error fetching social media info:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to fetch data" }),
+      JSON.stringify({ error: "Failed to fetch data" }),
       { status: 500 }
     );
   }
