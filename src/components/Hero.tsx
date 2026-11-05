@@ -7,7 +7,7 @@ import { FaUpwork } from "react-icons/fa6"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import Navbar from "./Navbar"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BiGlobe } from "react-icons/bi"
 import { motion } from "framer-motion"
 import ScrollToDemo from "./ScrollToDemo"
@@ -101,14 +101,36 @@ export default function Hero({ demoProfile }: HeroProps) {
     }
   }, [status, clientSession?.user?.id])
 
+  // The social links belong to the hero; past it they'd sit on top of the
+  // sections below, so they fade out once most of the hero has scrolled away.
+  const heroRef = useRef<HTMLDivElement>(null)
+  const dockRef = useRef<HTMLDivElement>(null)
+  // Starts true so the dock is there on first paint instead of fading in.
+  const [heroVisible, setHeroVisible] = useState(true)
+  useEffect(() => {
+    const hero = heroRef.current
+    if (!hero) return
+    const observer = new IntersectionObserver(([entry]) => setHeroVisible(entry.isIntersecting), {
+      threshold: 0.35,
+    })
+    observer.observe(hero)
+    return () => observer.disconnect()
+  }, [])
+  useEffect(() => {
+    // Keeps the hidden links out of the tab order (React 18 has no inert prop).
+    dockRef.current?.toggleAttribute("inert", !heroVisible)
+  }, [heroVisible])
+
   const handleCreatePortfolio = () => {
     // /me resolves to the portfolio or onboarding on the server.
     router.push(status === "authenticated" ? "/me" : "/auth/signup")
   }
 
+  const dockState = heroVisible ? "opacity-100 translate-y-0" : "pointer-events-none translate-y-3 opacity-0"
+
   return (
     <>
-      <div className="min-h-screen bg-[#f5f5f5] flex flex-col">
+      <div ref={heroRef} className="min-h-screen bg-[#f5f5f5] flex flex-col">
         <Navbar />
 
         {/* ── Hero content ─────────────────────────────────── */}
@@ -196,11 +218,13 @@ export default function Hero({ demoProfile }: HeroProps) {
         </div>
       </div>
 
-      <FloatingDock
-        desktopClassName="fixed bottom-10 right-10"
-        mobileClassName="fixed bottom-10 right-10"
-        items={links}
-      />
+      <div ref={dockRef} aria-hidden={!heroVisible}>
+        <FloatingDock
+          desktopClassName={`fixed bottom-10 right-10 z-40 transition-[opacity,transform] duration-300 ${dockState}`}
+          mobileClassName={`fixed bottom-10 right-10 z-40 transition-[opacity,transform] duration-300 ${dockState}`}
+          items={links}
+        />
+      </div>
 
     </>
   )
