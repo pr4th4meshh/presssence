@@ -12,11 +12,12 @@ import ProjectForm from "./addDialogs/ProjectForm"
 
 type AddItemType = "social" | "feature" | "project"
 
+// Preview colours mirror the [data-theme] values in globals.css.
 const THEMES = [
-  { id: "modern", label: "Modern", preview: "bg-gray-50 border-gray-200", dot: "bg-blue-500", desc: "Clean & minimal" },
-  { id: "creative", label: "Creative", preview: "bg-purple-950 border-purple-700", dot: "bg-fuchsia-500", desc: "Vibrant & expressive" },
-  { id: "professional", label: "Pro", preview: "bg-slate-950 border-slate-700", dot: "bg-amber-400", desc: "Sharp & refined" },
-  { id: "bold", label: "Bold", preview: "bg-black border-zinc-700", dot: "bg-cyan-400", desc: "High contrast" },
+  { id: "modern", label: "Modern", preview: "bg-[#f5f5f5] border-[#e0e0e0]", dot: "bg-[#444]", desc: "Clean & minimal" },
+  { id: "creative", label: "Creative", preview: "bg-[#f2ebff] border-[#7c3aed]/30", dot: "bg-[#7c3aed]", desc: "Lilac with violet" },
+  { id: "professional", label: "Pro", preview: "bg-[#e8f0fa] border-[#b45309]/25", dot: "bg-[#b45309]", desc: "Steel blue with amber" },
+  { id: "bold", label: "Bold", preview: "bg-[#e8f9f4] border-[#0d9488]/25", dot: "bg-[#0d9488]", desc: "Mint with teal" },
 ]
 
 const ADD_ITEMS: Array<{ type: AddItemType; icon: LucideIcon; label: string; title: string; description: string }> = [
@@ -136,7 +137,13 @@ const FloatingAddButton = ({
                     isActive ? "border-foreground" : "border-border hover:border-foreground/40"
                   }`}
                 >
-                  <div className={`mb-2 h-14 w-full rounded-lg border ${t.preview}`} />
+                  <div className={`mb-2 flex h-14 w-full flex-col justify-center gap-1.5 rounded-lg border px-3 ${t.preview}`} aria-hidden>
+                    <div className="h-1.5 w-12 rounded-full bg-black/70" />
+                    <div className="flex gap-1">
+                      <div className={`h-2.5 w-7 rounded-full opacity-40 ${t.dot}`} />
+                      <div className={`h-2.5 w-5 rounded-full opacity-40 ${t.dot}`} />
+                    </div>
+                  </div>
                   <div className="flex items-center gap-1.5">
                     <div className={`h-2 w-2 rounded-full ${t.dot}`} />
                     <span className="text-sm font-medium">{t.label}</span>
