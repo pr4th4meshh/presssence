@@ -2,18 +2,7 @@
 
 A portfolio builder for developers. Claim a username, upload your résumé, and get a page at `presssence.me/<username>` that you edit in place, with no separate dashboard.
 
-![A public Presssence portfolio](.github/screenshots/portfolio.png)
-
-## Screenshots
-
-| | |
-| --- | --- |
-| ![Landing page](.github/screenshots/landing.png) | ![Editing your own page, with the edit dock at the bottom](.github/screenshots/editing.png) |
-| Landing page | Your own page is the editor |
-| ![Adding skills from the dock](.github/screenshots/add-skills.png) | ![The Ask about chat on a public portfolio](.github/screenshots/chat.png) |
-| Adding skills | Visitors can ask questions about you |
-| ![Sign-in page](.github/screenshots/signin.png) | <img src=".github/screenshots/mobile.png" alt="A portfolio on a phone" width="260"> |
-| Sign in | On a phone |
+![Demo: a public portfolio, the Ask about chat, then editing your own page](.github/demo.gif)
 
 ## What it does
 
